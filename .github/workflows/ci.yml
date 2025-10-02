@@ -92,11 +92,25 @@ jobs:
       
     - name: Check for known vulnerabilities
       run: |
-        npm audit --audit-level=high --json > audit-results.json || true
-        if [ -s audit-results.json ]; then
-          echo "High severity vulnerabilities found:"
+        # Run audit and capture results
+        npm audit --audit-level=high --json > audit-results.json
+        audit_exit_code=$?
+        
+        # Parse the JSON to check vulnerability counts
+        high_vulns=$(cat audit-results.json | jq '.metadata.vulnerabilities.high // 0')
+        critical_vulns=$(cat audit-results.json | jq '.metadata.vulnerabilities.critical // 0')
+        total_high_critical=$((high_vulns + critical_vulns))
+        
+        echo "Vulnerability summary:"
+        cat audit-results.json | jq '.metadata.vulnerabilities'
+        
+        if [ $total_high_critical -gt 0 ]; then
+          echo "❌ Found $total_high_critical high/critical severity vulnerabilities:"
+          echo "High: $high_vulns, Critical: $critical_vulns"
           cat audit-results.json
           exit 1
+        else
+          echo "✅ No high or critical severity vulnerabilities found"
         fi
 
   docker:
@@ -112,15 +126,15 @@ jobs:
       
     - name: Test Docker Compose
       run: |
-        docker-compose config
+        docker compose config
         echo "Docker Compose configuration is valid"
         
     - name: Test LocalStack startup
       run: |
-        docker-compose up -d localstack
+        docker compose up -d localstack
         sleep 10
         curl -f http://localhost:4566/_localstack/health || exit 1
-        docker-compose down
+        docker compose down
 
   integration:
     name: Integration Tests

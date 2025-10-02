@@ -44,8 +44,12 @@ const s3Client = new S3Client({});
 const sqsClient = new SQSClient({});
 
 // Environment variables
-const S3_BUCKET = process.env.S3_BUCKET!;
-const SQS_QUEUE_URL = process.env.SQS_QUEUE_URL!;
+const S3_BUCKET = process.env.S3_BUCKET;
+const SQS_QUEUE_URL = process.env.SQS_QUEUE_URL;
+
+if (!S3_BUCKET || !SQS_QUEUE_URL) {
+  throw new Error('Missing required environment variables: S3_BUCKET, SQS_QUEUE_URL');
+}
 const WEBHOOK_URL = process.env.WEBHOOK_URL; // Optional webhook URL
 
 interface ProcessedEmail {
@@ -70,7 +74,34 @@ interface ProcessedEmail {
  * Main Lambda handler for processing email events
  * This function can be triggered by SES, SNS, or direct invocation
  */
-export const handler = async (event: any): Promise<void> => {
+interface SESEvent {
+  Records: Array<{
+    eventSource: string;
+    ses: {
+      mail: {
+        messageId: string;
+        source: string;
+        destination: string[];
+        commonHeaders: {
+          from: string[];
+          to: string[];
+          subject: string;
+        };
+      };
+    };
+  }>;
+}
+
+interface DirectEmailEvent {
+  messageId: string;
+  from: string;
+  to: string;
+  subject: string;
+  body: string;
+  html?: string;
+}
+
+export const handler = async(event: SESEvent | DirectEmailEvent): Promise<void> => {
   console.log('📧 Processing email event:', JSON.stringify(event, null, 2));
 
   try {
@@ -95,10 +126,41 @@ export const handler = async (event: any): Promise<void> => {
 /**
  * Process a single email record
  */
-async function processEmailRecord(record: any): Promise<void> {
+interface EmailRecord {
+  Sns?: {
+    Message: string;
+  };
+  ses?: {
+    mail: {
+      messageId: string;
+      source: string;
+      destination: string[];
+      commonHeaders: {
+        from: string[];
+        to: string[];
+        subject: string;
+      };
+    };
+  };
+}
+
+interface EmailData {
+  mail: {
+    messageId: string;
+    source: string;
+    destination: string[];
+    commonHeaders: {
+      from: string[];
+      to: string[];
+      subject: string;
+    };
+  };
+}
+
+async function processEmailRecord(record: EmailRecord): Promise<void> {
   try {
-    let emailData: any;
-    
+    let emailData: EmailData;
+
     // Handle SNS notification
     if (record.Sns && record.Sns.Message) {
       emailData = JSON.parse(record.Sns.Message);
@@ -108,7 +170,7 @@ async function processEmailRecord(record: any): Promise<void> {
     } else {
       throw new Error('Unknown record format');
     }
-    
+
     await processEmailData(emailData);
   } catch (error) {
     console.error('❌ Error processing email record:', error);
@@ -119,7 +181,7 @@ async function processEmailRecord(record: any): Promise<void> {
 /**
  * Process direct email data
  */
-async function processDirectEmail(emailData: any): Promise<void> {
+async function processDirectEmail(emailData: DirectEmailEvent): Promise<void> {
   try {
     await processEmailData(emailData);
   } catch (error) {
@@ -131,7 +193,7 @@ async function processDirectEmail(emailData: any): Promise<void> {
 /**
  * Process email data
  */
-async function processEmailData(emailData: any): Promise<void> {
+async function processEmailData(emailData: EmailData | DirectEmailEvent): Promise<void> {
   try {
     console.log('📨 Processing email data:', emailData);
 

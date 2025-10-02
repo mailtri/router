@@ -6,7 +6,6 @@ import * as ses from 'aws-cdk-lib/aws-ses';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as route53 from 'aws-cdk-lib/aws-route53';
-import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 import { Construct } from 'constructs';
 
 export class MailtriRouterStack extends cdk.Stack {
@@ -78,7 +77,7 @@ export class MailtriRouterStack extends cdk.Stack {
         LOG_LEVEL: 'INFO',
       },
       logGroup: new logs.LogGroup(this, 'EmailProcessorLogGroup', {
-        logGroupName: `/aws/lambda/mailtri-email-processor`,
+        logGroupName: '/aws/lambda/mailtri-email-processor',
         retention: logs.RetentionDays.ONE_MONTH,
       }),
       deadLetterQueue: new sqs.Queue(this, 'EmailProcessorDLQ', {
@@ -97,8 +96,8 @@ export class MailtriRouterStack extends cdk.Stack {
       sendingEnabled: true,
     });
 
-    // IAM Role for SES to access S3
-    const sesRole = new iam.Role(this, 'SESRole', {
+    // IAM Role for SES to access S3 (created but not used in CDK due to SES limitations)
+    new iam.Role(this, 'SESRole', {
       assumedBy: new iam.ServicePrincipal('ses.amazonaws.com'),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonS3FullAccess'),
@@ -110,11 +109,11 @@ export class MailtriRouterStack extends cdk.Stack {
 
     // Route 53 Configuration (optional)
     const domainName = this.node.tryGetContext('domainName');
-    
+
     if (domainName && domainName !== 'example.com') {
       // Only create Route 53 records if a real domain is provided
       const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
-        domainName: domainName,
+        domainName,
       });
 
       // Create SES domain verification record
@@ -135,25 +134,25 @@ export class MailtriRouterStack extends cdk.Stack {
       new route53.TxtRecord(this, 'DMARCRecord', {
         zone: hostedZone,
         recordName: `_dmarc.${domainName}`,
-        values: ['v=DMARC1; p=quarantine; rua=mailto:dmarc@' + domainName],
+        values: [`v=DMARC1; p=quarantine; rua=mailto:dmarc@${domainName}`],
       });
 
       // Create DKIM records (these will be updated after SES domain verification)
       new route53.TxtRecord(this, 'DKIMRecord1', {
         zone: hostedZone,
-        recordName: 'dkim1._domainkey.' + domainName,
+        recordName: `dkim1._domainkey.${domainName}`,
         values: ['DKIM record will be added after SES domain verification'],
       });
 
       new route53.TxtRecord(this, 'DKIMRecord2', {
         zone: hostedZone,
-        recordName: 'dkim2._domainkey.' + domainName,
+        recordName: `dkim2._domainkey.${domainName}`,
         values: ['DKIM record will be added after SES domain verification'],
       });
 
       new route53.TxtRecord(this, 'DKIMRecord3', {
         zone: hostedZone,
-        recordName: 'dkim3._domainkey.' + domainName,
+        recordName: `dkim3._domainkey.${domainName}`,
         values: ['DKIM record will be added after SES domain verification'],
       });
     }

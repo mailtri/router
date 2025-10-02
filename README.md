@@ -40,6 +40,9 @@ aws ses verify-domain-identity --domain your-domain.com
 # Start local services (LocalStack + Mailpit)
 docker-compose up -d
 
+# Init services
+npm run dev:init
+
 # Run local development server
 npm run dev
 
@@ -124,39 +127,6 @@ The router outputs standardized JSON payloads to SQS:
     }
   }
 }
-```
-
-## Development
-
-### Project Structure
-```
-router/
-├─ README.md
-├─ LICENSE (MIT)
-├─ CONTRIBUTING.md
-├─ SECURITY.md
-├─ package.json
-├─ tsconfig.json
-├─ cdk/
-│  ├─ bin/app.ts
-│  └─ lib/InfraStack.ts
-├─ lambda/
-│  └─ ingest/
-│     ├─ aws.ts
-│     ├─ handler.ts
-│     └─ dist/ (ignored)
-├─ worker/
-│  ├─ sqs-consumer.ts
-│  ├─ nangoClient.ts (stub)
-│  └─ composioClient.ts (stub)
-├─ dev/
-│  ├─ docker-compose.yml
-│  ├─ scripts/dev-init.sh
-│  ├─ run-local.ts
-│  └─ fixtures/test.eml
-├─ docs/
-│  └─ PLAN.md
-└─ .github/workflows/ci.yml
 ```
 
 ### Scripts

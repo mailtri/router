@@ -1,0 +1,21 @@
+From: user@example.com
+To: task+notion@domain.com
+Subject: Create task: New feature request
+Date: Mon, 15 Jan 2024 10:30:00 +0000
+Message-ID: <test-123@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Please implement user authentication for the mobile app.
+
+This should include:
+- Login with email/password
+- Social login (Google, Apple)
+- Password reset functionality
+- Session management
+
+Priority: High
+Deadline: End of this week
+
+Thanks!
+

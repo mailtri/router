@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # LocalStack for AWS service emulation
+  localstack:
+    container_name: mailtri-localstack
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"            # LocalStack Gateway
+      - "4510-4559:4510-4559"  # External services port range
+    environment:
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - SERVICES=ses,s3,lambda,sqs,iam,logs
+      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_REMOVE_CONTAINERS=true
+      - LAMBDA_DOCKER_NETWORK=mailtri_default
+      - SQS_ENDPOINT_STRATEGY=domain
+      - S3_SKIP_SIGNATURE_VALIDATION=1
+      - SKIP_INFRA_DOWNLOADS=1
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./dev/localstack-data:/var/lib/localstack"
+    networks:
+      - mailtri
+
+  # Mailpit for local SMTP testing
+  mailpit:
+    container_name: mailtri-mailpit
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web interface
+    environment:
+      - MP_SMTP_AUTH_ACCEPT_ANY=1
+      - MP_SMTP_AUTH_ALLOW_INSECURE=1
+    networks:
+      - mailtri
+
+  # Redis for caching (optional)
+  redis:
+    container_name: mailtri-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./dev/redis-data:/data"
+    networks:
+      - mailtri
+
+  # PostgreSQL for local database (optional)
+  postgres:
+    container_name: mailtri-postgres
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=mailtri
+      - POSTGRES_USER=mailtri
+      - POSTGRES_PASSWORD=mailtri123
+    volumes:
+      - "./dev/postgres-data:/var/lib/postgresql/data"
+    networks:
+      - mailtri
+
+networks:
+  mailtri:
+    driver: bridge
+
+volumes:
+  localstack-data:
+  redis-data:
+  postgres-data:
+

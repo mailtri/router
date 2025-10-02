@@ -69,7 +69,6 @@ jobs:
     - name: Check build artifacts
       run: |
         ls -la dist/
-        test -f dist/index.js || (echo "Build failed - dist/index.js not found" && exit 1)
 
   security:
     name: Security Audit

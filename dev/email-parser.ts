@@ -15,7 +15,7 @@ export async function parseEmailIntent(
   emailContent: string,
   from: string,
   to: string,
-  subject: string
+  subject: string,
 ): Promise<EmailIntent> {
   const intent: EmailIntent = {
     action: 'unknown',

@@ -97,7 +97,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
       parsedText,
       emailData.from,
       emailData.to,
-      emailData.subject
+      emailData.subject,
     );
 
     // Create S3 key for email storage
@@ -122,7 +122,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
           intent,
         }),
         ContentType: 'application/json',
-      })
+      }),
     );
 
     // Send to SQS for downstream processing
@@ -135,7 +135,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
           intent,
           timestamp: new Date().toISOString(),
         }),
-      })
+      }),
     );
 
     console.log('✅ Email processed successfully:', intent);
@@ -152,7 +152,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
 /**
  * Create HTTP server for webhook endpoint
  */
-const server = createServer(async (req, res) => {
+const server = createServer(async(req, res) => {
   const { pathname } = parse(req.url || '', true);
 
   // CORS headers
@@ -169,7 +169,7 @@ const server = createServer(async (req, res) => {
   if (pathname === '/webhook' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => (body += chunk));
-    req.on('end', async () => {
+    req.on('end', async() => {
       try {
         const emailData = JSON.parse(body);
         const result = await processEmail(emailData);
@@ -184,7 +184,7 @@ const server = createServer(async (req, res) => {
   } else if (pathname === '/health' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(
-      JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() })
+      JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }),
     );
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -203,7 +203,7 @@ server.listen(config.port, () => {
   console.log(`curl -X POST http://localhost:${config.port}/webhook \\`);
   console.log('  -H "Content-Type: application/json" \\');
   console.log(
-    '  -d \'{"to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}\''
+    '  -d \'{"to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}\'',
   );
   console.log('');
   console.log('📚 Service URLs:');

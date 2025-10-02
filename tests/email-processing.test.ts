@@ -19,7 +19,7 @@ describe('Email Processing', () => {
   });
 
   describe('Email Content Parsing', () => {
-    test('should parse simple text content', async () => {
+    test('should parse simple text content', async() => {
       const emailContent = 'Simple email content';
 
       mockSimpleParser.mockResolvedValue({
@@ -37,7 +37,7 @@ describe('Email Processing', () => {
       expect(result.attachments).toEqual([]);
     });
 
-    test('should parse HTML content', async () => {
+    test('should parse HTML content', async() => {
       const emailContent = '<p>HTML email content</p>';
 
       mockSimpleParser.mockResolvedValue({
@@ -53,7 +53,7 @@ describe('Email Processing', () => {
       expect(result.html).toBe('<p>HTML email content</p>');
     });
 
-    test('should handle attachments', async () => {
+    test('should handle attachments', async() => {
       const emailContent = 'Email with attachment';
 
       mockSimpleParser.mockResolvedValue({
@@ -104,7 +104,7 @@ Test email content`;
   });
 
   describe('Error Handling', () => {
-    test('should handle mailparser errors gracefully', async () => {
+    test('should handle mailparser errors gracefully', async() => {
       const emailContent = 'Invalid email format';
 
       mockSimpleParser.mockRejectedValue(new Error('Invalid email format'));

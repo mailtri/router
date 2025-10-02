@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.d.ts
+
+# Coverage
+coverage/
+
+# Config files
+.eslintrc.js
+jest.config.js
+*.config.js
+
+# Generated files
+*.js.map
+*.d.ts.map
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Local development
+dev/localstack-data/
+dev/redis-data/
+dev/postgres-data/

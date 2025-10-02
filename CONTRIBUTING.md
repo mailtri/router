@@ -18,17 +18,20 @@ This project follows the [Contributor Covenant Code of Conduct](https://www.cont
 ### Development Setup
 
 1. **Fork and clone the repository**
+
    ```bash
    git clone https://github.com/your-username/mailtri-router.git
    cd mailtri-router
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Start local development environment**
+
    ```bash
    docker-compose up -d
    npm run dev
@@ -44,6 +47,7 @@ This project follows the [Contributor Covenant Code of Conduct](https://www.cont
 ### Branch Naming
 
 Use descriptive branch names:
+
 - `feature/email-parsing-improvements`
 - `fix/sqs-message-handling`
 - `docs/update-readme`
@@ -51,6 +55,7 @@ Use descriptive branch names:
 ### Commit Messages
 
 Follow conventional commit format:
+
 ```
 type(scope): description
 
@@ -74,20 +79,24 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Tests pass locally
 - [ ] New tests added for new functionality
 - [ ] Manual testing completed
 
 ## Checklist
+
 - [ ] Code follows project style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -132,18 +141,21 @@ mailtri-router/
 ## Areas for Contribution
 
 ### High Priority
+
 - Email parsing improvements
 - Error handling and retry logic
 - Local development experience
 - Documentation and examples
 
 ### Medium Priority
+
 - Performance optimizations
 - Additional command patterns
 - Monitoring and logging
 - Security enhancements
 
 ### Low Priority
+
 - UI improvements for local dev
 - Additional test coverage
 - Code refactoring
@@ -154,6 +166,7 @@ mailtri-router/
 ### Bug Reports
 
 Use the GitHub issue template and include:
+
 - Clear description of the problem
 - Steps to reproduce
 - Expected vs actual behavior
@@ -163,6 +176,7 @@ Use the GitHub issue template and include:
 ### Feature Requests
 
 Include:
+
 - Use case description
 - Proposed solution
 - Alternative approaches considered
@@ -185,4 +199,3 @@ Include:
 ## License
 
 By contributing to mailtri-router, you agree that your contributions will be licensed under the MIT License.
-

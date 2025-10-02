@@ -5,22 +5,22 @@
 export interface EmailIntent {
   action: string;
   target: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 /**
  * Parse email content and extract intent
  */
 export async function parseEmailIntent(
-  emailContent: string, 
-  from: string, 
-  to: string, 
+  emailContent: string,
+  from: string,
+  to: string,
   subject: string
 ): Promise<EmailIntent> {
   const intent: EmailIntent = {
     action: 'unknown',
     target: 'unknown',
-    parameters: {}
+    parameters: {},
   };
 
   // Parse recipient commands (e.g., task+notion@domain.com)

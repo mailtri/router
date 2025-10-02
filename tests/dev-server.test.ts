@@ -2,12 +2,7 @@
  * Tests for the development server
  */
 
-import { createServer } from 'http';
 import { parseEmailIntent } from '../dev/email-parser';
-
-// Mock the development server functions
-const mockProcessEmail = jest.fn();
-const mockCreateServer = jest.fn();
 
 // Mock the server implementation
 jest.mock('http', () => ({
@@ -15,8 +10,8 @@ jest.mock('http', () => ({
     listen: jest.fn((port, callback) => {
       if (callback) callback();
       return { close: jest.fn() };
-    })
-  }))
+    }),
+  })),
 }));
 
 describe('Development Server', () => {
@@ -82,7 +77,9 @@ describe('Development Server', () => {
       );
 
       expect(intent.action).toBe('create_task');
-      expect(intent.parameters.description).toBe('Implement user authentication');
+      expect(intent.parameters.description).toBe(
+        'Implement user authentication'
+      );
     });
 
     test('should parse body commands with #meeting', async () => {
@@ -94,7 +91,9 @@ describe('Development Server', () => {
       );
 
       expect(intent.action).toBe('create_meeting');
-      expect(intent.parameters.description).toBe('Schedule standup for tomorrow');
+      expect(intent.parameters.description).toBe(
+        'Schedule standup for tomorrow'
+      );
     });
 
     test('should handle unknown commands', async () => {
@@ -121,7 +120,8 @@ describe('Development Server', () => {
         localstackEndpoint: 'http://localhost:4566',
         mailpitEndpoint: 'http://localhost:8025',
         s3Bucket: 'mailtri-emails-test',
-        sqsQueueUrl: 'http://localhost:4566/000000000000/mailtri-processed-emails-test'
+        sqsQueueUrl:
+          'http://localhost:4566/000000000000/mailtri-processed-emails-test',
       };
 
       expect(config.localstackEndpoint).toBe('http://localhost:4566');
@@ -137,7 +137,7 @@ describe('Development Server', () => {
         from: 'user@example.com',
         to: 'task+notion@domain.com',
         subject: 'Test Subject',
-        body: 'Test content'
+        body: 'Test content',
       };
 
       expect(validEmailData.messageId).toBeDefined();
@@ -157,7 +157,7 @@ describe('Development Server', () => {
         messageId: 'test-123',
         from: 'user@example.com',
         to: 'task+notion@domain.com',
-        subject: 'Test Subject'
+        subject: 'Test Subject',
       };
 
       expect(emailDataWithoutBody.body).toBeUndefined();

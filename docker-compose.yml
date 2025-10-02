@@ -6,8 +6,8 @@ services:
     container_name: mailtri-localstack
     image: localstack/localstack:latest
     ports:
-      - "4566:4566"            # LocalStack Gateway
-      - "4510-4559:4510-4559"  # External services port range
+      - '4566:4566' # LocalStack Gateway
+      - '4510-4559:4510-4559' # External services port range
     environment:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
@@ -19,8 +19,8 @@ services:
       - S3_SKIP_SIGNATURE_VALIDATION=1
       - SKIP_INFRA_DOWNLOADS=1
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./dev/localstack-data:/var/lib/localstack"
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - './dev/localstack-data:/var/lib/localstack'
     networks:
       - mailtri
 
@@ -29,8 +29,8 @@ services:
     container_name: mailtri-mailpit
     image: axllent/mailpit:latest
     ports:
-      - "1025:1025"  # SMTP server
-      - "8025:8025"  # Web interface
+      - '1025:1025' # SMTP server
+      - '8025:8025' # Web interface
     environment:
       - MP_SMTP_AUTH_ACCEPT_ANY=1
       - MP_SMTP_AUTH_ALLOW_INSECURE=1
@@ -42,9 +42,9 @@ services:
     container_name: mailtri-redis
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
-      - "./dev/redis-data:/data"
+      - './dev/redis-data:/data'
     networks:
       - mailtri
 
@@ -53,13 +53,13 @@ services:
     container_name: mailtri-postgres
     image: postgres:15-alpine
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       - POSTGRES_DB=mailtri
       - POSTGRES_USER=mailtri
       - POSTGRES_PASSWORD=mailtri123
     volumes:
-      - "./dev/postgres-data:/var/lib/postgresql/data"
+      - './dev/postgres-data:/var/lib/postgresql/data'
     networks:
       - mailtri
 
@@ -71,4 +71,3 @@ volumes:
   localstack-data:
   redis-data:
   postgres-data:
-

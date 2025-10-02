@@ -11,7 +11,9 @@ describe('Development Server Startup', () => {
   test('should have LocalStack configuration', () => {
     expect(process.env.LOCALSTACK_ENDPOINT).toBe('http://localhost:4566');
     expect(process.env.S3_BUCKET).toBe('mailtri-emails-test');
-    expect(process.env.SQS_QUEUE_URL).toContain('mailtri-processed-emails-test');
+    expect(process.env.SQS_QUEUE_URL).toContain(
+      'mailtri-processed-emails-test'
+    );
   });
 
   test('should validate port configuration', () => {
@@ -23,7 +25,7 @@ describe('Development Server Startup', () => {
   test('should have valid service endpoints', () => {
     const localstackEndpoint = process.env.LOCALSTACK_ENDPOINT;
     const mailpitEndpoint = 'http://localhost:8025';
-    
+
     expect(localstackEndpoint).toMatch(/^http:\/\/localhost:\d+$/);
     expect(mailpitEndpoint).toMatch(/^http:\/\/localhost:\d+$/);
   });

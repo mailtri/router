@@ -9,11 +9,11 @@ module.exports = {
     'worker/**/*.ts',
     '!**/*.d.ts',
     '!**/node_modules/**',
-    '!**/dist/**'
+    '!**/dist/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
-  verbose: true
+  verbose: true,
 };

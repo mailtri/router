@@ -39,8 +39,8 @@
     "@types/mailparser": "^3.4.6",
     "@types/node": "^20.9.0",
     "@types/supertest": "^2.0.16",
-    "@typescript-eslint/eslint-plugin": "^6.12.0",
-    "@typescript-eslint/parser": "^6.12.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "aws-cdk": "^2.100.0",
     "aws-cdk-lib": "^2.100.0",
     "constructs": "^10.3.0",
@@ -55,10 +55,10 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@aws-sdk/client-lambda": "^3.450.0",
     "@aws-sdk/client-s3": "^3.450.0",
     "@aws-sdk/client-ses": "^3.450.0",
     "@aws-sdk/client-sqs": "^3.450.0",
-    "@aws-sdk/client-lambda": "^3.450.0",
     "aws-lambda": "^1.0.7",
     "mailparser": "^3.6.5",
     "nodemailer": "^6.9.7"
@@ -85,4 +85,3 @@
   },
   "homepage": "https://github.com/mailtri/router#readme"
 }
-

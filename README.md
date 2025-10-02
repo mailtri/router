@@ -11,6 +11,7 @@
 The `mailtri-router` is the foundational component of Mailtri's email automation platform. It provides a complete AWS infrastructure stack (SES → S3 → Lambda → SQS) for processing inbound emails and routing them to workflow handlers.
 
 This repository contains everything needed to:
+
 - Deploy email processing infrastructure to AWS
 - Parse email commands and extract intent
 - Queue email payloads for downstream processing
@@ -19,11 +20,13 @@ This repository contains everything needed to:
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 20+ and npm
 - AWS CLI configured
 - Docker and Docker Compose (for local development)
 
 ### Deploy to AWS
+
 ```bash
 # Install dependencies
 npm install
@@ -36,6 +39,7 @@ aws ses verify-domain-identity --domain your-domain.com
 ```
 
 ### Local Development
+
 ```bash
 # Start local services (LocalStack + Mailpit)
 docker-compose up -d
@@ -55,6 +59,7 @@ curl -X POST http://localhost:3000/webhook \
 ## Architecture
 
 ### AWS Infrastructure Stack
+
 ```
 SES → S3 → Lambda → SQS
 ```
@@ -65,6 +70,7 @@ SES → S3 → Lambda → SQS
 - **SQS**: Queues processed emails for downstream handlers
 
 ### Local Development Stack
+
 ```
 Mailpit → LocalStack → Local Lambda → Local SQS
 ```
@@ -77,6 +83,7 @@ Mailpit → LocalStack → Local Lambda → Local SQS
 ## Command Patterns
 
 ### Email Recipient Commands
+
 ```
 task+notion@domain.com          # Create Notion task
 invoice+quickbooks@domain.com   # Process invoice
@@ -84,6 +91,7 @@ recruit+ats@domain.com          # Add to ATS
 ```
 
 ### Subject Line Commands
+
 ```
 Send Invoice: Q1                # Process invoice for Q1
 Schedule Meeting: Tomorrow      # Create calendar event
@@ -91,6 +99,7 @@ Update Project: Status          # Update project status
 ```
 
 ### Body Content Commands
+
 ```
 #task Create new feature        # Create task with description
 #meeting Schedule standup       # Schedule recurring meeting
@@ -130,6 +139,7 @@ The router outputs standardized JSON payloads to SQS:
 ```
 
 ### Scripts
+
 ```bash
 npm run build          # Build TypeScript
 npm run deploy         # Deploy to AWS

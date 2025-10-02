@@ -7,7 +7,6 @@
 
 import { createServer } from 'http';
 import { parse } from 'url';
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { simpleParser } from 'mailparser';
@@ -24,7 +23,11 @@ interface EmailData {
 
 interface ProcessResult {
   success: boolean;
-  intent?: any;
+  intent?: {
+    action: string;
+    target: string;
+    parameters: Record<string, unknown>;
+  };
   error?: string;
 }
 
@@ -35,27 +38,18 @@ const config = {
   mailpitEndpoint: 'http://localhost:8025',
   s3Bucket: 'mailtri-emails',
   sqsQueueUrl: 'http://localhost:4566/000000000000/mailtri-processed-emails',
-  region: 'us-east-1'
+  region: 'us-east-1',
 };
 
 // Initialize AWS clients for LocalStack
-const sesClient = new SESClient({
-  endpoint: config.localstackEndpoint,
-  region: config.region,
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  }
-});
-
 const s3Client = new S3Client({
   endpoint: config.localstackEndpoint,
   region: config.region,
   credentials: {
     accessKeyId: 'test',
-    secretAccessKey: 'test'
+    secretAccessKey: 'test',
   },
-  forcePathStyle: true
+  forcePathStyle: true,
 });
 
 const sqsClient = new SQSClient({
@@ -63,10 +57,9 @@ const sqsClient = new SQSClient({
   region: config.region,
   credentials: {
     accessKeyId: 'test',
-    secretAccessKey: 'test'
-  }
+    secretAccessKey: 'test',
+  },
 });
-
 
 /**
  * Process incoming email
@@ -76,13 +69,17 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
     console.log('📧 Processing email:', emailData.subject);
 
     // Handle both email format and simple JSON input
-    let emailContent = emailData.body || '';
+    const emailContent = emailData.body || '';
     let parsedText = emailContent;
     let parsedHtml = '';
-    let attachments: any[] = [];
+    let attachments: unknown[] = [];
 
     // Check if this is a raw email format (contains headers)
-    if (emailContent.includes('From:') || emailContent.includes('To:') || emailContent.includes('Subject:')) {
+    if (
+      emailContent.includes('From:') ||
+      emailContent.includes('To:') ||
+      emailContent.includes('Subject:')
+    ) {
       try {
         const parsed = await simpleParser(emailContent);
         parsedText = parsed.text || '';
@@ -93,7 +90,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
         // Keep original content as plain text
       }
     }
-    
+
     // Extract intent
     console.log('📝 Parsed text:', parsedText);
     const intent = await parseEmailIntent(
@@ -105,46 +102,49 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
 
     // Create S3 key for email storage
     const s3Key = `emails/${Date.now()}/${emailData.messageId}.json`;
-    
+
     // Store email in S3
-    await s3Client.send(new PutObjectCommand({
-      Bucket: config.s3Bucket,
-      Key: s3Key,
-      Body: JSON.stringify({
-        messageId: emailData.messageId,
-        timestamp: new Date().toISOString(),
-        email: {
-          from: emailData.from,
-          to: emailData.to,
-          subject: emailData.subject,
-          body: parsedText,
-          html: parsedHtml,
-          attachments: attachments
-        },
-        intent
-      }),
-      ContentType: 'application/json'
-    }));
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: config.s3Bucket,
+        Key: s3Key,
+        Body: JSON.stringify({
+          messageId: emailData.messageId,
+          timestamp: new Date().toISOString(),
+          email: {
+            from: emailData.from,
+            to: emailData.to,
+            subject: emailData.subject,
+            body: parsedText,
+            html: parsedHtml,
+            attachments,
+          },
+          intent,
+        }),
+        ContentType: 'application/json',
+      })
+    );
 
     // Send to SQS for downstream processing
-    await sqsClient.send(new SendMessageCommand({
-      QueueUrl: config.sqsQueueUrl,
-      MessageBody: JSON.stringify({
-        messageId: emailData.messageId,
-        s3Key,
-        intent,
-        timestamp: new Date().toISOString()
+    await sqsClient.send(
+      new SendMessageCommand({
+        QueueUrl: config.sqsQueueUrl,
+        MessageBody: JSON.stringify({
+          messageId: emailData.messageId,
+          s3Key,
+          intent,
+          timestamp: new Date().toISOString(),
+        }),
       })
-    }));
+    );
 
     console.log('✅ Email processed successfully:', intent);
     return { success: true, intent };
-
   } catch (error) {
     console.error('❌ Error processing email:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -154,7 +154,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
  */
 const server = createServer(async (req, res) => {
   const { pathname } = parse(req.url || '', true);
-  
+
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -168,12 +168,12 @@ const server = createServer(async (req, res) => {
 
   if (pathname === '/webhook' && req.method === 'POST') {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', chunk => (body += chunk));
     req.on('end', async () => {
       try {
         const emailData = JSON.parse(body);
         const result = await processEmail(emailData);
-        
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));
       } catch (error) {
@@ -183,7 +183,9 @@ const server = createServer(async (req, res) => {
     });
   } else if (pathname === '/health' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }));
+    res.end(
+      JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() })
+    );
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not found' }));
@@ -200,7 +202,9 @@ server.listen(config.port, () => {
   console.log('🔧 Test with curl:');
   console.log(`curl -X POST http://localhost:${config.port}/webhook \\`);
   console.log('  -H "Content-Type: application/json" \\');
-  console.log('  -d \'{"to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}\'');
+  console.log(
+    '  -d \'{"to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}\''
+  );
   console.log('');
   console.log('📚 Service URLs:');
   console.log('  • Mailpit Web UI: http://localhost:8025');
@@ -215,4 +219,3 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
 });
-

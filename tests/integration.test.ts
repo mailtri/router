@@ -2,19 +2,16 @@
  * Integration tests for the development server
  */
 
-import request from 'supertest';
-import { createServer } from 'http';
-
 // Mock the development server
 const mockServer = {
   listen: jest.fn((port, callback) => {
     if (callback) callback();
     return { close: jest.fn() };
-  })
+  }),
 };
 
 jest.mock('http', () => ({
-  createServer: jest.fn(() => mockServer)
+  createServer: jest.fn(() => mockServer),
 }));
 
 describe('Development Server Integration', () => {
@@ -29,6 +26,7 @@ describe('Development Server Integration', () => {
     });
 
     test('should create HTTP server', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { createServer } = require('http');
       createServer();
       expect(createServer).toHaveBeenCalled();
@@ -47,7 +45,8 @@ describe('Development Server Integration', () => {
     test('should use LocalStack endpoints', () => {
       const localstackEndpoint = 'http://localhost:4566';
       const s3Bucket = 'mailtri-emails-test';
-      const sqsQueueUrl = 'http://localhost:4566/000000000000/mailtri-processed-emails-test';
+      const sqsQueueUrl =
+        'http://localhost:4566/000000000000/mailtri-processed-emails-test';
 
       expect(localstackEndpoint).toBe('http://localhost:4566');
       expect(s3Bucket).toBe('mailtri-emails-test');

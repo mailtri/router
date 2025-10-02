@@ -5,16 +5,19 @@ This directory contains all the necessary files and scripts for local developmen
 ## Quick Start
 
 1. **Initialize development environment:**
+
    ```bash
    npm run dev:init
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Start development server:**
+
    ```bash
    npm run dev
    ```
@@ -29,20 +32,24 @@ This directory contains all the necessary files and scripts for local developmen
 ## Services
 
 ### LocalStack (AWS Emulation)
+
 - **Endpoint:** http://localhost:4566
 - **Services:** SES, S3, Lambda, SQS, IAM, CloudWatch Logs
 - **Purpose:** Emulates AWS services for local development
 
 ### Mailpit (SMTP Testing)
+
 - **SMTP Server:** localhost:1025
 - **Web UI:** http://localhost:8025
 - **Purpose:** Local SMTP server for testing email sending/receiving
 
 ### Redis (Caching)
+
 - **Endpoint:** localhost:6379
 - **Purpose:** Optional caching layer for development
 
 ### PostgreSQL (Database)
+
 - **Endpoint:** localhost:5432
 - **Database:** mailtri
 - **User:** mailtri
@@ -69,12 +76,14 @@ The development environment uses the following configuration:
 ## Testing
 
 ### Manual Testing
+
 1. Send emails to localhost:1025
 2. Check Mailpit web UI at http://localhost:8025
 3. Verify S3 bucket contents in LocalStack
 4. Check SQS queue messages
 
 ### Automated Testing
+
 ```bash
 # Run tests
 npm test
@@ -86,6 +95,7 @@ npm run test:coverage
 ## Troubleshooting
 
 ### Services not starting
+
 ```bash
 # Check Docker is running
 docker info
@@ -98,6 +108,7 @@ docker-compose logs
 ```
 
 ### LocalStack issues
+
 ```bash
 # Check LocalStack health
 curl http://localhost:4566/_localstack/health
@@ -108,7 +119,9 @@ npm run dev:init
 ```
 
 ### Port conflicts
+
 If you have port conflicts, modify the ports in `docker-compose.yml`:
+
 - LocalStack: 4566
 - Mailpit SMTP: 1025
 - Mailpit Web: 8025
@@ -133,4 +146,3 @@ npm run dev:clean
 # Remove only containers (keep volumes)
 docker-compose down
 ```
-

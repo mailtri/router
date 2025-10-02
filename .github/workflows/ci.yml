@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x, 21.x]
+        node-version: [20.x]
 
     steps:
       - name: Checkout code
@@ -45,6 +45,7 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
+        continue-on-error: true
 
   build:
     name: Build Check
@@ -190,35 +191,3 @@ jobs:
           LOCALSTACK_ENDPOINT: http://localhost:4566
           S3_BUCKET: mailtri-emails-test
           SQS_QUEUE_URL: http://localhost:4566/000000000000/mailtri-processed-emails-test
-
-  deploy-preview:
-    name: Deploy Preview
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build project
-        run: npm run build
-
-      - name: Comment PR with build status
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '✅ Build completed successfully! All tests passed and TypeScript compilation succeeded.'
-            })

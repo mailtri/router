@@ -7,6 +7,7 @@ yarn-error.log*
 # Build outputs
 dist/
 build/
+lambda-package/
 *.tsbuildinfo
 
 # Environment variables
@@ -29,6 +30,7 @@ Thumbs.db
 
 # AWS CDK
 cdk.out/
+cdk.context.json
 *.d.ts
 
 # Local development

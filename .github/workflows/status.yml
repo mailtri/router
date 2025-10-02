@@ -1,0 +1,23 @@
+name: Status Check
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types: [completed]
+
+jobs:
+  status:
+    name: Update Status
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion != 'success'
+    
+    steps:
+    - name: Check workflow status
+      run: |
+        echo "Workflow status: ${{ github.event.workflow_run.conclusion }}"
+        if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+          echo "❌ CI/CD Pipeline failed"
+          exit 1
+        else
+          echo "✅ CI/CD Pipeline passed"
+        fi

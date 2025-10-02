@@ -106,12 +106,12 @@ export const handler = async(event: SESEvent | DirectEmailEvent): Promise<void> 
 
   try {
     // Handle different event types
-    if (event.Records && Array.isArray(event.Records)) {
+    if ('Records' in event && Array.isArray(event.Records)) {
       // SES/SNS event
       for (const record of event.Records) {
         await processEmailRecord(record);
       }
-    } else if (event.messageId) {
+    } else if ('messageId' in event) {
       // Direct email object
       await processDirectEmail(event);
     } else {
@@ -145,6 +145,7 @@ interface EmailRecord {
 }
 
 interface EmailData {
+  content?: string;
   mail: {
     messageId: string;
     source: string;
@@ -197,12 +198,28 @@ async function processEmailData(emailData: EmailData | DirectEmailEvent): Promis
   try {
     console.log('📨 Processing email data:', emailData);
 
-    // Extract email content
-    const emailContent = emailData.content || emailData.body || '';
-    const messageId = emailData.mail?.messageId || emailData.messageId || `msg-${Date.now()}`;
-    const from = emailData.mail?.source || emailData.from || 'unknown@example.com';
-    const to = emailData.mail?.destination?.[0] || emailData.to || 'unknown@example.com';
-    const subject = emailData.mail?.commonHeaders?.subject || emailData.subject || '';
+    // Extract email content based on data type
+    let emailContent: string;
+    let messageId: string;
+    let from: string;
+    let to: string;
+    let subject: string;
+
+    if ('mail' in emailData) {
+      // EmailData type
+      emailContent = emailData.content || '';
+      messageId = emailData.mail.messageId || `msg-${Date.now()}`;
+      from = emailData.mail.source || 'unknown@example.com';
+      to = emailData.mail.destination?.[0] || 'unknown@example.com';
+      subject = emailData.mail.commonHeaders?.subject || '';
+    } else {
+      // DirectEmailEvent type
+      emailContent = emailData.body || '';
+      messageId = emailData.messageId || `msg-${Date.now()}`;
+      from = emailData.from || 'unknown@example.com';
+      to = emailData.to || 'unknown@example.com';
+      subject = emailData.subject || '';
+    }
 
     // Parse email content
     let parsedText = emailContent;

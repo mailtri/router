@@ -1,0 +1,11 @@
+From: test@example.com
+To: recipient@example.com
+Subject: Malformed Email Test
+Date: Mon, 1 Jan 2024 12:00:00 +0000
+Message-ID: <malformed@example.com>
+
+This is a malformed email with missing headers and invalid content.
+
+The email structure is intentionally broken to test error handling.
+
+

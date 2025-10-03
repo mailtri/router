@@ -1,0 +1,20 @@
+From: sender@example.com
+To: user+task@example.com, user+meeting@example.com
+Subject: Create: Meeting for Project Planning
+Date: Mon, 1 Jan 2024 12:00:00 +0000
+Message-ID: <command-extraction@example.com>
+
+This email contains multiple command extraction patterns.
+
+#task create new feature
+Please implement user authentication system.
+
+#meeting schedule standup
+Daily standup at 9 AM.
+
+#reminder set project deadline
+Project deadline is next Friday.
+
+Please review and implement these tasks.
+
+

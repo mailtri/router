@@ -1,0 +1,61 @@
+From: test@example.com
+To: recipient@example.com
+Subject: Multipart Mixed with Attachments
+Date: Mon, 1 Jan 2024 12:00:00 +0000
+Message-ID: <multipart-mixed@example.com>
+Content-Type: multipart/mixed; boundary="boundary123"
+
+--boundary123
+Content-Type: text/plain
+
+This email contains attachments.
+
+--boundary123
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="document.pdf"
+
+%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+>>
+endobj
+xref
+0 4
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+trailer
+<<
+/Size 4
+/Root 1 0 R
+>>
+startxref
+200
+%%EOF
+
+--boundary123
+Content-Type: image/png
+Content-Disposition: attachment; filename="image.png"
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==
+
+--boundary123--
+
+

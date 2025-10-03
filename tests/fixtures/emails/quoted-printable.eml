@@ -1,0 +1,14 @@
+From: test@example.com
+To: recipient@example.com
+Subject: Quoted-Printable Test
+Date: Mon, 1 Jan 2024 12:00:00 +0000
+Message-ID: <quoted-printable@example.com>
+Content-Transfer-Encoding: quoted-printable
+
+This is a test email with quoted-printable encoding.
+
+It contains line breaks=0Aand special characters=20like this.
+
+The encoding should be properly decoded.
+
+

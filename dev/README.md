@@ -10,6 +10,12 @@ This directory contains all the necessary files and scripts for local developmen
    npm run dev:init
    ```
 
+2. **Run local components:**
+
+   ```bash
+   docker compose up
+   ```
+
 2. **Install dependencies:**
 
    ```bash

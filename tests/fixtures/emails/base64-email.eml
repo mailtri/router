@@ -1,0 +1,10 @@
+From: test@example.com
+To: recipient@example.com
+Subject: Base64 Test
+Date: Mon, 1 Jan 2024 12:00:00 +0000
+Message-ID: <base64@example.com>
+Content-Transfer-Encoding: base64
+
+VGhpcyBpcyBhIHRlc3QgZW1haWwgd2l0aCBiYXNlNjQgZW5jb2RpbmcuCgpJdCBjb250YWlucyBsaW5lIGJyZWFrcyBhbmQgc3BlY2lhbCBjaGFyYWN0ZXJzLgoKVGhlIGVuY29kaW5nIHNob3VsZCBiZSBwcm9wZXJseSBkZWNvZGVkLg==
+
+

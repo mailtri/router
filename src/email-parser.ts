@@ -59,17 +59,23 @@ export class EmailParser {
     }
 
     // Fallback to generated ID
-    return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
 
   private normalizeEmailAddress(address: any): EmailAddress {
     if (!address || !address.address) return { address: '', name: '', original: '' };
 
+    // Preserve the most faithful original representation if available
+    const original: string =
+      (typeof address.original === 'string' && address.original) ||
+      (typeof address.text === 'string' && address.text) ||
+      (address.name ? `${address.name} <${address.address}` + '>' : address.address);
+
     return {
       address: address.address.toLowerCase(),
       name: address.name || '',
-      original: address.address,
+      original,
     };
   }
 

@@ -81,24 +81,30 @@ export class AttachmentProcessor {
           inEvent = false;
         }
       } else if (inEvent && trimmed.includes(':')) {
-        const [key, value] = trimmed.split(':', 2);
-        const cleanKey = key?.replace(/;.*$/, '') || ''; // Remove parameters
+        const [key, rawValue] = trimmed.split(':', 2);
+        const cleanKey = (key?.replace(/;.*$/, '') || '').toUpperCase(); // Remove parameters and normalize
+        const normalizedValue = typeof rawValue === 'string' ? rawValue.trim() : undefined;
+
+        // Skip assigning if the value is missing or empty to avoid empty strings
+        if (!normalizedValue) {
+          continue;
+        }
 
         switch (cleanKey) {
         case 'SUMMARY':
-          currentEvent.summary = value;
+          currentEvent.summary = normalizedValue;
           break;
         case 'DTSTART':
-          currentEvent.start = value;
+          currentEvent.start = normalizedValue;
           break;
         case 'DTEND':
-          currentEvent.end = value;
+          currentEvent.end = normalizedValue;
           break;
         case 'LOCATION':
-          currentEvent.location = value;
+          currentEvent.location = normalizedValue;
           break;
         case 'DESCRIPTION':
-          currentEvent.description = value;
+          currentEvent.description = normalizedValue;
           break;
         }
       }

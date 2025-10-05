@@ -1,0 +1,25 @@
+From: test@example.com
+To: recipient@example.com
+Subject: Multipart Alternative Test
+Date: Mon, 1 Jan 2024 12:00:00 +0000
+Message-ID: <multipart@example.com>
+Content-Type: multipart/alternative; boundary="boundary123"
+
+--boundary123
+Content-Type: text/plain
+
+This is the plain text version of the email.
+
+--boundary123
+Content-Type: text/html
+
+<html>
+<body>
+  <p>This is the <b>HTML</b> version of the email.</p>
+  <p>It contains <i>formatting</i> and <u>styles</u>.</p>
+</body>
+</html>
+
+--boundary123--
+
+

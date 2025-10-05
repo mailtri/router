@@ -1,0 +1,18 @@
+From: test@example.com
+To: recipient@example.com
+Subject: =?UTF-8?B?VGVzdCBFbWFpbCB3aXRoIEVtb2ppIOKdpA==?=
+Date: Mon, 1 Jan 2024 12:00:00 +0000
+Message-ID: <unicode@example.com>
+Content-Type: text/plain; charset=UTF-8
+
+This is a test email with Unicode characters and emojis 🚀.
+
+It contains:
+- Special characters: àáâãäåæçèéêë
+- Emojis: 😀 😁 😂 🤣 😃 😄 😅 😆
+- Mathematical symbols: ∑ ∏ ∫ ∞ ≤ ≥ ≠
+- Currency symbols: € £ ¥ $ ₹
+
+This email tests Unicode handling capabilities.
+
+

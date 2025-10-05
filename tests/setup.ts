@@ -33,14 +33,9 @@ jest.mock('@aws-sdk/client-ses', () => ({
   SendEmailCommand: jest.fn(),
 }));
 
-// Mock mailparser
-jest.mock('mailparser', () => ({
-  simpleParser: jest.fn().mockResolvedValue({
-    text: 'Test email content',
-    html: '<p>Test email content</p>',
-    attachments: [],
-  }),
-}));
+// Mock mailparser only for specific tests that need it
+// We'll use jest.doMock() in individual test files instead of global mock
+// This allows email parser tests to use the real mailparser
 
 // Global test timeout
 jest.setTimeout(10000);

@@ -7,8 +7,8 @@
 
 import { createServer } from 'http';
 import { parse } from 'url';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { S3Client, PutObjectCommand, CreateBucketCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
+import { SQSClient, SendMessageCommand, CreateQueueCommand, GetQueueUrlCommand } from '@aws-sdk/client-sqs';
 import { simpleParser } from 'mailparser';
 import { parseEmailIntent } from './email-parser';
 
@@ -60,6 +60,36 @@ const sqsClient = new SQSClient({
     secretAccessKey: 'test',
   },
 });
+
+/**
+ * Ensure required AWS resources exist
+ */
+async function ensureResourcesExist(): Promise<void> {
+  try {
+    // Check if S3 bucket exists, create if not
+    try {
+      await s3Client.send(new HeadBucketCommand({ Bucket: config.s3Bucket }));
+      console.log('✅ S3 bucket exists:', config.s3Bucket);
+    } catch (error) {
+      console.log('📦 Creating S3 bucket:', config.s3Bucket);
+      await s3Client.send(new CreateBucketCommand({ Bucket: config.s3Bucket }));
+      console.log('✅ S3 bucket created:', config.s3Bucket);
+    }
+
+    // Check if SQS queue exists, create if not
+    try {
+      await sqsClient.send(new GetQueueUrlCommand({ QueueName: 'mailtri-processed-emails' }));
+      console.log('✅ SQS queue exists: mailtri-processed-emails');
+    } catch (error) {
+      console.log('📬 Creating SQS queue: mailtri-processed-emails');
+      await sqsClient.send(new CreateQueueCommand({ QueueName: 'mailtri-processed-emails' }));
+      console.log('✅ SQS queue created: mailtri-processed-emails');
+    }
+  } catch (error) {
+    console.error('❌ Error ensuring resources exist:', error);
+    throw error;
+  }
+}
 
 /**
  * Process incoming email
@@ -193,17 +223,27 @@ const server = createServer(async(req, res) => {
 });
 
 // Start server
-server.listen(config.port, () => {
+server.listen(config.port, async () => {
   console.log('🚀 mailtri-router development server started!');
   console.log(`📡 Server running on http://localhost:${config.port}`);
   console.log(`📧 Webhook endpoint: http://localhost:${config.port}/webhook`);
   console.log(`❤️  Health check: http://localhost:${config.port}/health`);
   console.log('');
+  
+  // Ensure required AWS resources exist
+  try {
+    await ensureResourcesExist();
+  } catch (error) {
+    console.error('❌ Failed to ensure AWS resources exist:', error);
+    console.log('💡 Make sure LocalStack is running: docker-compose up -d');
+    process.exit(1);
+  }
+  
   console.log('🔧 Test with curl:');
   console.log(`curl -X POST http://localhost:${config.port}/webhook \\`);
   console.log('  -H "Content-Type: application/json" \\');
   console.log(
-    '  -d \'{"to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}\'',
+    '  -d \'{"messageId": "test-123", "from": "test@example.com", "to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}\'',
   );
   console.log('');
   console.log('📚 Service URLs:');

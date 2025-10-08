@@ -8,7 +8,11 @@ export interface ProcessedAttachment extends Attachment {
 }
 
 export class EmailParsingError extends Error {
-  constructor(message: string, public override cause?: Error, public context?: any) {
+  constructor(
+    message: string,
+    public override cause?: Error,
+    public context?: any
+  ) {
     super(message);
     this.name = 'EmailParsingError';
   }
@@ -31,12 +35,16 @@ export class EmailParser {
 
       // If none of the basic email components are present, consider it malformed
       if (!hasFrom && !hasTo && !hasSubject && !hasBody) {
-        throw new Error('Email appears to be completely malformed - no recognizable email structure found');
+        throw new Error(
+          'Email appears to be completely malformed - no recognizable email structure found'
+        );
       }
 
       return {
         messageId: this.extractMessageId(parsed),
-        from: this.normalizeEmailAddress((parsed.from as any)?.value?.[0] || {}),
+        from: this.normalizeEmailAddress(
+          (parsed.from as any)?.value?.[0] || {}
+        ),
         to: this.normalizeEmailAddresses((parsed.to as any)?.value || []),
         cc: this.normalizeEmailAddresses((parsed.cc as any)?.value || []),
         bcc: this.normalizeEmailAddresses((parsed.bcc as any)?.value || []),
@@ -62,15 +70,17 @@ export class EmailParser {
     return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
-
   private normalizeEmailAddress(address: any): EmailAddress {
-    if (!address || !address.address) return { address: '', name: '', original: '' };
+    if (!address || !address.address)
+      return { address: '', name: '', original: '' };
 
     // Preserve the most faithful original representation if available
     const original: string =
       (typeof address.original === 'string' && address.original) ||
       (typeof address.text === 'string' && address.text) ||
-      (address.name ? `${address.name} <${address.address}` + '>' : address.address);
+      (address.name
+        ? `${address.name} <${address.address}` + '>'
+        : address.address);
 
     return {
       address: address.address.toLowerCase(),
@@ -95,7 +105,11 @@ export class EmailParser {
       .normalize('NFC');
   }
 
-  private normalizeBody(parsed: any): { text?: string; html?: string; normalized: string } {
+  private normalizeBody(parsed: any): {
+    text?: string;
+    html?: string;
+    normalized: string;
+  } {
     const text = parsed.text || '';
     const html = parsed.html || '';
 
@@ -137,7 +151,9 @@ export class EmailParser {
 
     if (headers) {
       for (const [key, value] of headers) {
-        normalized[key.toLowerCase()] = Array.isArray(value) ? value.join(', ') : value;
+        normalized[key.toLowerCase()] = Array.isArray(value)
+          ? value.join(', ')
+          : value;
       }
     }
 
@@ -154,9 +170,7 @@ export class EmailParser {
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, '\'')
+      .replace(/&#39;/g, "'")
       .trim();
   }
-
-
 }

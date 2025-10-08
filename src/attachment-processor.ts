@@ -1,7 +1,9 @@
 import { Attachment, ProcessedAttachment } from './types';
 
 export class AttachmentProcessor {
-  async processAttachment(attachment: Attachment): Promise<ProcessedAttachment> {
+  async processAttachment(
+    attachment: Attachment
+  ): Promise<ProcessedAttachment> {
     const result: ProcessedAttachment = {
       ...attachment,
       processed: false,
@@ -10,7 +12,10 @@ export class AttachmentProcessor {
 
     try {
       // Process ICS files
-      if (attachment.contentType === 'text/calendar' || attachment.filename.endsWith('.ics')) {
+      if (
+        attachment.contentType === 'text/calendar' ||
+        attachment.filename.endsWith('.ics')
+      ) {
         result.metadata = await this.processICSFile(attachment);
         result.processed = true;
       }
@@ -32,12 +37,32 @@ export class AttachmentProcessor {
         result.metadata = await this.processArchive(attachment);
         result.processed = true;
       }
-
     } catch (error) {
       result.error = (error as Error).message;
     }
 
     return result;
+  }
+
+  async processAttachments(attachments: Attachment[]): Promise<ProcessedAttachment[]> {
+    const results: ProcessedAttachment[] = [];
+    
+    for (const attachment of attachments) {
+      try {
+        const processed = await this.processAttachment(attachment);
+        results.push(processed);
+      } catch (error) {
+        // Add failed attachment with error info
+        results.push({
+          ...attachment,
+          processed: false,
+          error: (error as Error).message,
+          metadata: {},
+        });
+      }
+    }
+    
+    return results;
   }
 
   private async processICSFile(attachment: Attachment): Promise<any> {
@@ -83,7 +108,8 @@ export class AttachmentProcessor {
       } else if (inEvent && trimmed.includes(':')) {
         const [key, rawValue] = trimmed.split(':', 2);
         const cleanKey = (key?.replace(/;.*$/, '') || '').toUpperCase(); // Remove parameters and normalize
-        const normalizedValue = typeof rawValue === 'string' ? rawValue.trim() : undefined;
+        const normalizedValue =
+          typeof rawValue === 'string' ? rawValue.trim() : undefined;
 
         // Skip assigning if the value is missing or empty to avoid empty strings
         if (!normalizedValue) {
@@ -91,21 +117,21 @@ export class AttachmentProcessor {
         }
 
         switch (cleanKey) {
-        case 'SUMMARY':
-          currentEvent.summary = normalizedValue;
-          break;
-        case 'DTSTART':
-          currentEvent.start = normalizedValue;
-          break;
-        case 'DTEND':
-          currentEvent.end = normalizedValue;
-          break;
-        case 'LOCATION':
-          currentEvent.location = normalizedValue;
-          break;
-        case 'DESCRIPTION':
-          currentEvent.description = normalizedValue;
-          break;
+          case 'SUMMARY':
+            currentEvent.summary = normalizedValue;
+            break;
+          case 'DTSTART':
+            currentEvent.start = normalizedValue;
+            break;
+          case 'DTEND':
+            currentEvent.end = normalizedValue;
+            break;
+          case 'LOCATION':
+            currentEvent.location = normalizedValue;
+            break;
+          case 'DESCRIPTION':
+            currentEvent.description = normalizedValue;
+            break;
         }
       }
     }
@@ -141,7 +167,12 @@ export class AttachmentProcessor {
       const header = content.subarray(0, 4);
 
       // PNG
-      if (header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47) {
+      if (
+        header[0] === 0x89 &&
+        header[1] === 0x50 &&
+        header[2] === 0x4e &&
+        header[3] === 0x47
+      ) {
         metadata.format = 'png';
         if (content.length >= 24) {
           metadata.width = content.readUInt32BE(16);
@@ -149,7 +180,7 @@ export class AttachmentProcessor {
         }
       }
       // JPEG
-      else if (header[0] === 0xFF && header[1] === 0xD8) {
+      else if (header[0] === 0xff && header[1] === 0xd8) {
         metadata.format = 'jpeg';
         // JPEG dimensions are more complex to extract
         metadata.width = 0;
@@ -193,14 +224,20 @@ export class AttachmentProcessor {
     };
 
     // Basic PDF detection
-    if (attachment.contentType === 'application/pdf' || attachment.filename.endsWith('.pdf')) {
+    if (
+      attachment.contentType === 'application/pdf' ||
+      attachment.filename.endsWith('.pdf')
+    ) {
       metadata.type = 'pdf';
       // PDF metadata extraction would go here
     }
 
     // Basic Word document detection
-    if (attachment.contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        attachment.filename.endsWith('.docx')) {
+    if (
+      attachment.contentType ===
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      attachment.filename.endsWith('.docx')
+    ) {
       metadata.type = 'docx';
       // Word document metadata extraction would go here
     }
@@ -232,13 +269,19 @@ export class AttachmentProcessor {
     };
 
     // Basic ZIP detection
-    if (attachment.contentType === 'application/zip' || attachment.filename.endsWith('.zip')) {
+    if (
+      attachment.contentType === 'application/zip' ||
+      attachment.filename.endsWith('.zip')
+    ) {
       metadata.format = 'zip';
       // ZIP metadata extraction would go here
     }
 
     // Basic TAR detection
-    if (attachment.contentType === 'application/x-tar' || attachment.filename.endsWith('.tar')) {
+    if (
+      attachment.contentType === 'application/x-tar' ||
+      attachment.filename.endsWith('.tar')
+    ) {
       metadata.format = 'tar';
       // TAR metadata extraction would go here
     }

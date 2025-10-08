@@ -14,22 +14,24 @@ This guide will help you set up AWS credentials and deploy the Mailtri Router in
 ### Option 1: AWS CLI Configuration (Recommended)
 
 1. **Install AWS CLI** (if not already installed):
+
    ```bash
    # macOS
    brew install awscli
-   
+
    # Ubuntu/Debian
    sudo apt-get install awscli
-   
+
    # Windows
    # Download from https://aws.amazon.com/cli/
    ```
 
 2. **Configure AWS credentials**:
+
    ```bash
    aws configure
    ```
-   
+
    Enter the following information when prompted:
    - **AWS Access Key ID**: Your access key
    - **AWS Secret Access Key**: Your secret key
@@ -62,6 +64,7 @@ aws configure --profile mailtri
 ```
 
 Then set the profile:
+
 ```bash
 export AWS_PROFILE=mailtri
 ```
@@ -71,18 +74,14 @@ export AWS_PROFILE=mailtri
 Your AWS user/role needs the following permissions:
 
 ### CDK Bootstrap Permissions
+
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "cloudformation:*",
-        "s3:*",
-        "iam:*",
-        "ssm:*"
-      ],
+      "Action": ["cloudformation:*", "s3:*", "iam:*", "ssm:*"],
       "Resource": "*"
     }
   ]
@@ -90,6 +89,7 @@ Your AWS user/role needs the following permissions:
 ```
 
 ### Runtime Permissions
+
 ```json
 {
   "Version": "2012-10-17",
@@ -132,21 +132,25 @@ npx cdk bootstrap aws://ACCOUNT-NUMBER/REGION
 ## Deployment
 
 1. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 2. **Build the project**:
+
    ```bash
    npm run build
    ```
 
 3. **Synthesize the CloudFormation template** (optional):
+
    ```bash
    npm run cdk:synth
    ```
 
 4. **Review changes**:
+
    ```bash
    npm run cdk:diff
    ```
@@ -198,16 +202,19 @@ aws lambda list-functions --query 'Functions[?contains(FunctionName, `mailtri`)]
 ## SES Configuration
 
 1. **Verify email addresses** (for testing):
+
    ```bash
    aws ses verify-email-identity --email-address your-email@example.com
    ```
 
 2. **Verify domain** (for production):
+
    ```bash
    aws ses verify-domain-identity --domain example.com
    ```
 
 3. **Create SES rule set**:
+
    ```bash
    aws ses create-receipt-rule-set --rule-set-name mailtri-router
    ```
@@ -227,12 +234,14 @@ aws lambda list-functions --query 'Functions[?contains(FunctionName, `mailtri`)]
 ### Common Issues
 
 1. **"No credentials found"**:
+
    ```bash
    aws configure list
    aws sts get-caller-identity
    ```
 
 2. **"CDK not bootstrapped"**:
+
    ```bash
    npx cdk bootstrap
    ```

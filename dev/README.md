@@ -16,19 +16,19 @@ This directory contains all the necessary files and scripts for local developmen
    docker compose up
    ```
 
-2. **Install dependencies:**
+3. **Install dependencies:**
 
    ```bash
    npm install
    ```
 
-3. **Start development server:**
+4. **Start development server:**
 
    ```bash
    npm run dev
    ```
 
-4. **Test the system:**
+5. **Test the system:**
    ```bash
    curl -X POST http://localhost:3000/webhook \
      -H "Content-Type: application/json" \
@@ -66,7 +66,6 @@ This directory contains all the necessary files and scripts for local developmen
 
 - `dev/scripts/dev-init.sh` - Initialize development environment
 - `dev/scripts/stop-dev.sh` - Stop development environment
-- `dev/run-local.ts` - Local development server
 - `dev/fixtures/test.eml` - Sample email for testing
 
 ## Configuration

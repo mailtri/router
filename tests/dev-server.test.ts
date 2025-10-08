@@ -2,7 +2,7 @@
  * Tests for the development server
  */
 
-import { parseEmailIntent } from '../dev/email-parser';
+import { parseEmailIntent } from '../src/email-intent-parser';
 
 // Mock the server implementation
 jest.mock('http', () => ({
@@ -20,88 +20,88 @@ describe('Development Server', () => {
   });
 
   describe('Email Intent Parsing', () => {
-    test('should parse recipient commands correctly', async() => {
+    test('should parse recipient commands correctly', async () => {
       const intent = await parseEmailIntent(
         'Test email content',
         'user@example.com',
         'task+notion@domain.com',
-        'Test Subject',
+        'Test Subject'
       );
 
       expect(intent.action).toBe('create_task');
       expect(intent.target).toBe('notion');
     });
 
-    test('should parse invoice recipient commands', async() => {
+    test('should parse invoice recipient commands', async () => {
       const intent = await parseEmailIntent(
         'Invoice content',
         'user@example.com',
         'invoice+quickbooks@domain.com',
-        'Regular Subject',
+        'Regular Subject'
       );
 
       expect(intent.action).toBe('create_invoice');
       expect(intent.target).toBe('quickbooks');
     });
 
-    test('should parse subject line commands', async() => {
+    test('should parse subject line commands', async () => {
       const intent = await parseEmailIntent(
         'Email content',
         'user@example.com',
         'user@domain.com',
-        'Send Invoice: Q1',
+        'Send Invoice: Q1'
       );
 
       expect(intent.action).toBe('process_invoice');
       expect(intent.target).toBe('quickbooks');
     });
 
-    test('should parse meeting subject commands', async() => {
+    test('should parse meeting subject commands', async () => {
       const intent = await parseEmailIntent(
         'Meeting content',
         'user@example.com',
         'user@domain.com',
-        'Schedule Meeting: Tomorrow',
+        'Schedule Meeting: Tomorrow'
       );
 
       expect(intent.action).toBe('schedule_meeting');
       expect(intent.target).toBe('calendar');
     });
 
-    test('should parse body commands with #task', async() => {
+    test('should parse body commands with #task', async () => {
       const intent = await parseEmailIntent(
         '#task Implement user authentication',
         'user@example.com',
         'user@domain.com',
-        'Test Subject',
+        'Test Subject'
       );
 
       expect(intent.action).toBe('create_task');
       expect(intent.parameters.description).toBe(
-        'Implement user authentication',
+        'Implement user authentication'
       );
     });
 
-    test('should parse body commands with #meeting', async() => {
+    test('should parse body commands with #meeting', async () => {
       const intent = await parseEmailIntent(
         '#meeting Schedule standup for tomorrow',
         'user@example.com',
         'user@domain.com',
-        'Test Subject',
+        'Test Subject'
       );
 
       expect(intent.action).toBe('create_meeting');
       expect(intent.parameters.description).toBe(
-        'Schedule standup for tomorrow',
+        'Schedule standup for tomorrow'
       );
     });
 
-    test('should handle unknown commands', async() => {
+    test('should handle unknown commands', async () => {
       const intent = await parseEmailIntent(
         'Regular email content',
         'user@example.com',
         'user@domain.com',
-        'Regular Subject',
+        'Regular Subject'
       );
 
       expect(intent.action).toBe('unknown');

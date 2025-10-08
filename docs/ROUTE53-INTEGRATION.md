@@ -87,6 +87,7 @@ Your AWS credentials need these permissions:
 ## DNS Records Created
 
 ### SPF Record
+
 ```
 Type: TXT
 Name: yourdomain.com
@@ -94,6 +95,7 @@ Value: v=spf1 include:amazonses.com ~all
 ```
 
 ### DMARC Record
+
 ```
 Type: TXT
 Name: _dmarc.yourdomain.com
@@ -101,6 +103,7 @@ Value: v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com
 ```
 
 ### SES Domain Verification
+
 ```
 Type: TXT
 Name: _amazonses.yourdomain.com
@@ -108,6 +111,7 @@ Value: [SES verification token]
 ```
 
 ### DKIM Records
+
 ```
 Type: TXT
 Name: dkim1._domainkey.yourdomain.com

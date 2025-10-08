@@ -1,4 +1,6 @@
 import { EmailParser, EmailParsingError } from '../src/email-parser';
+import fs from 'fs';
+import path from 'path';
 
 describe('EmailParser', () => {
   let parser: EmailParser;
@@ -8,7 +10,7 @@ describe('EmailParser', () => {
   });
 
   describe('Basic Email Parsing', () => {
-    it('should parse a simple email', async() => {
+    it('should parse a simple email', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -25,7 +27,7 @@ This is a test email body.`;
       expect(result.body.normalized).toBe('This is a test email body.');
     });
 
-    it('should handle emails without subject', async() => {
+    it('should handle emails without subject', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Date: Mon, 1 Jan 2024 12:00:00 +0000
@@ -39,7 +41,7 @@ This is a test email body.`;
       expect(result.body.normalized).toBe('This is a test email body.');
     });
 
-    it('should handle emails with empty body', async() => {
+    it('should handle emails with empty body', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -56,7 +58,7 @@ Message-ID: <test@example.com>
   });
 
   describe('CC and BCC Support', () => {
-    it('should parse emails with CC recipients', async() => {
+    it('should parse emails with CC recipients', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 CC: cc1@example.com, cc2@example.com
@@ -74,7 +76,7 @@ This is a test email body.`;
       expect(result.cc?.[1]?.address).toBe('cc2@example.com');
     });
 
-    it('should parse emails with BCC recipients', async() => {
+    it('should parse emails with BCC recipients', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 BCC: bcc1@example.com, bcc2@example.com
@@ -92,7 +94,7 @@ This is a test email body.`;
       expect(result.bcc?.[1]?.address).toBe('bcc2@example.com');
     });
 
-    it('should parse emails with both CC and BCC recipients', async() => {
+    it('should parse emails with both CC and BCC recipients', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 CC: cc1@example.com, cc2@example.com
@@ -114,7 +116,7 @@ This is a test email body.`;
       expect(result.bcc?.[1]?.address).toBe('bcc2@example.com');
     });
 
-    it('should handle CC and BCC with names', async() => {
+    it('should handle CC and BCC with names', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 CC: "CC User 1" <cc1@example.com>, "CC User 2" <cc2@example.com>
@@ -137,7 +139,7 @@ This is a test email body.`;
       expect(result.bcc?.[1]?.address).toBe('bcc2@example.com');
     });
 
-    it('should handle case-insensitive CC and BCC headers', async() => {
+    it('should handle case-insensitive CC and BCC headers', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 cc: cc1@example.com, cc2@example.com
@@ -156,7 +158,7 @@ This is a test email body.`;
       expect(result.bcc?.[0]?.address).toBe('bcc1@example.com');
     });
 
-    it('should handle CC and BCC with plus-addressing', async() => {
+    it('should handle CC and BCC with plus-addressing', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 CC: user+cc@example.com, user+important@example.com
@@ -175,7 +177,7 @@ This is a test email body.`;
       expect(result.bcc?.[1]?.address).toBe('user+secret@example.com');
     });
 
-    it('should handle emails without CC or BCC', async() => {
+    it('should handle emails without CC or BCC', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -191,7 +193,7 @@ This is a test email body.`;
       expect(result.bcc).toEqual([]);
     });
 
-    it('should handle empty CC and BCC fields', async() => {
+    it('should handle empty CC and BCC fields', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 CC: 
@@ -209,7 +211,7 @@ This is a test email body.`;
       expect(result.bcc).toEqual([]);
     });
 
-    it('should normalize CC and BCC email addresses to lowercase', async() => {
+    it('should normalize CC and BCC email addresses to lowercase', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 CC: CC1@EXAMPLE.COM, CC2@EXAMPLE.COM
@@ -234,7 +236,7 @@ This is a test email body.`;
   });
 
   describe('Plus-Addressing Support', () => {
-    it('should parse plus-addressed emails', async() => {
+    it('should parse plus-addressed emails', async () => {
       const emailContent = `From: test@example.com
 To: user+task@example.com
 Subject: Test Subject
@@ -248,7 +250,7 @@ This is a test email body.`;
       expect(result.to[0]?.address).toBe('user+task@example.com');
     });
 
-    it('should handle multiple plus signs', async() => {
+    it('should handle multiple plus signs', async () => {
       const emailContent = `From: test@example.com
 To: user+task+urgent@example.com
 Subject: Test Subject
@@ -262,7 +264,7 @@ This is a test email body.`;
       expect(result.to[0]?.address).toBe('user+task+urgent@example.com');
     });
 
-    it('should handle plus-addressing with special characters', async() => {
+    it('should handle plus-addressing with special characters', async () => {
       const emailContent = `From: test@example.com
 To: user+task-urgent@example.com
 Subject: Test Subject
@@ -278,7 +280,7 @@ This is a test email body.`;
   });
 
   describe('Case-Insensitive Processing', () => {
-    it('should handle email addresses in any case', async() => {
+    it('should handle email addresses in any case', async () => {
       const emailContent = `From: TEST@EXAMPLE.COM
 To: RECIPIENT@EXAMPLE.COM
 Subject: Test Subject
@@ -297,7 +299,7 @@ This is a test email body.`;
   });
 
   describe('Unicode & Internationalization', () => {
-    it('should handle Unicode in email headers', async() => {
+    it('should handle Unicode in email headers', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: =?UTF-8?B?VGVzdCDwn5iA?=
@@ -311,7 +313,7 @@ This is a test email body.`;
       expect(result.subject).toContain('Test');
     });
 
-    it('should handle Unicode in email body', async() => {
+    it('should handle Unicode in email body', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -325,7 +327,7 @@ This is a test email with emoji 🚀 and unicode characters.`;
       expect(result.body.normalized).toContain('🚀');
     });
 
-    it('should handle internationalized domain names', async() => {
+    it('should handle internationalized domain names', async () => {
       const emailContent = `From: test@example.com
 To: recipient@测试.com
 Subject: Test Subject
@@ -341,7 +343,7 @@ This is a test email body.`;
   });
 
   describe('MIME Handling', () => {
-    it('should parse multipart/alternative emails', async() => {
+    it('should parse multipart/alternative emails', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -368,7 +370,7 @@ Content-Type: text/html
       expect(result.body.normalized).toContain('plain text version');
     });
 
-    it('should parse multipart/mixed emails with attachments', async() => {
+    it('should parse multipart/mixed emails with attachments', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -403,7 +405,7 @@ endobj
       expect(result.attachments[0]?.contentType).toBe('application/pdf');
     });
 
-    it('should handle embedded messages', async() => {
+    it('should handle embedded messages', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -437,7 +439,7 @@ This is an embedded message.
   });
 
   describe('Content Normalization', () => {
-    it('should normalize HTML content', async() => {
+    it('should normalize HTML content', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -457,12 +459,14 @@ Content-Type: text/html
       const result = await parser.parseEmail(Buffer.from(emailContent));
 
       expect(result.body.html).toContain('<b>test</b>');
-      expect(result.body.normalized).toBe('This is a test email with formatting.');
+      expect(result.body.normalized).toBe(
+        'This is a test email with formatting.'
+      );
       expect(result.body.normalized).not.toContain('<script>');
       expect(result.body.normalized).not.toContain('<style>');
     });
 
-    it('should handle quoted-printable encoding', async() => {
+    it('should handle quoted-printable encoding', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -478,7 +482,7 @@ This is a test email with=0Aline breaks and special=20characters.`;
       expect(result.body.normalized).toContain('special characters');
     });
 
-    it('should handle base64 encoding', async() => {
+    it('should handle base64 encoding', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -490,10 +494,12 @@ VGhpcyBpcyBhIHRlc3QgZW1haWwgd2l0aCBiYXNlNjQgZW5jb2Rpbmcu`;
 
       const result = await parser.parseEmail(Buffer.from(emailContent));
 
-      expect(result.body.normalized).toContain('test email with base64 encoding');
+      expect(result.body.normalized).toContain(
+        'test email with base64 encoding'
+      );
     });
 
-    it('should normalize line endings', async() => {
+    it('should normalize line endings', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -504,14 +510,16 @@ This is a test email\r\nwith different\rline endings\nand multiple\n\n\nspaces.`
 
       const result = await parser.parseEmail(Buffer.from(emailContent));
 
-      expect(result.body.normalized).toBe('This is a test email\nwith different\nline endings\nand multiple\n\nspaces.');
+      expect(result.body.normalized).toBe(
+        'This is a test email\nwith different\nline endings\nand multiple\n\nspaces.'
+      );
     });
   });
 
   // Command extraction tests removed - AI will handle intent extraction downstream
 
   describe('Error Handling', () => {
-    it('should handle malformed email headers', async() => {
+    it('should handle malformed email headers', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -526,7 +534,7 @@ This is a test email body.`;
       expect(result.to[0]?.address).toBe('recipient@example.com');
     });
 
-    it('should handle emails with missing required headers', async() => {
+    it('should handle emails with missing required headers', async () => {
       const emailContent = `Subject: Test Subject
 
 This is a test email body.`;
@@ -537,16 +545,17 @@ This is a test email body.`;
       expect(result.body.normalized).toBe('This is a test email body.');
     });
 
-    it('should throw EmailParsingError for completely malformed emails', async() => {
+    it('should throw EmailParsingError for completely malformed emails', async () => {
       const emailContent = 'This is not a valid email format';
 
-      await expect(parser.parseEmail(Buffer.from(emailContent)))
-        .rejects.toThrow(EmailParsingError);
+      await expect(
+        parser.parseEmail(Buffer.from(emailContent))
+      ).rejects.toThrow(EmailParsingError);
     });
   });
 
   describe('Performance', () => {
-    it('should parse emails quickly', async() => {
+    it('should parse emails quickly', async () => {
       const emailContent = `From: test@example.com
 To: recipient@example.com
 Subject: Test Subject
@@ -562,7 +571,7 @@ This is a test email body.`;
       expect(endTime - startTime).toBeLessThan(1000); // Should parse in less than 1 second
     });
 
-    it('should handle large emails efficiently', async() => {
+    it('should handle large emails efficiently', async () => {
       const largeBody = 'This is a test email body. '.repeat(10000);
       const emailContent = `From: test@example.com
 To: recipient@example.com
@@ -578,6 +587,28 @@ ${largeBody}`;
 
       expect(endTime - startTime).toBeLessThan(2000); // Should parse in less than 2 seconds
       expect(result.body.normalized).toContain('This is a test email body.');
+    });
+  });
+
+  describe('Real Email File Parsing', () => {
+    it('should parse the test.eml fixture file', async () => {
+      const emlPath = path.join(__dirname, 'fixtures', 'test.eml');
+      const emlContent = fs.readFileSync(emlPath, 'utf8');
+      
+      const result = await parser.parseEmail(Buffer.from(emlContent));
+      
+      expect(result.from.address).toBe('user@example.com');
+      expect(result.to[0]?.address).toBe('task+notion@domain.com');
+      expect(result.subject).toBe('Create task: New feature request');
+      expect(result.messageId).toBe('<test-123@example.com>');
+      expect(result.body.normalized).toContain('Please implement user authentication');
+      expect(result.body.normalized).toContain('Login with email/password');
+      expect(result.body.normalized).toContain('Social login (Google, Apple)');
+      expect(result.body.normalized).toContain('Password reset functionality');
+      expect(result.body.normalized).toContain('Session management');
+      expect(result.body.normalized).toContain('Priority: High');
+      expect(result.body.normalized).toContain('Deadline: End of this week');
+      expect(result.body.normalized).toContain('Thanks!');
     });
   });
 });

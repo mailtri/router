@@ -180,10 +180,11 @@ aws cloudwatch put-metric-alarm \
 ### Common Issues
 
 1. **CDK Bootstrap Failed**
+
    ```bash
    # Check permissions
    aws sts get-caller-identity
-   
+
    # Re-run bootstrap
    npx cdk bootstrap --force
    ```

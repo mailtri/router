@@ -78,13 +78,39 @@ END:VCALENDAR`;
     it('should process PNG images', async() => {
       // Create a minimal PNG file
       const pngHeader = Buffer.from([
-        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-        0x00, 0x00, 0x00, 0x0D, // IHDR chunk length
-        0x49, 0x48, 0x44, 0x52, // IHDR
-        0x00, 0x00, 0x00, 0x64, // width: 100
-        0x00, 0x00, 0x00, 0x64, // height: 100
-        0x08, 0x02, 0x00, 0x00, 0x00, // bit depth, color type, etc.
-        0x90, 0x77, 0x53, 0xDE, // CRC
+        0x89,
+        0x50,
+        0x4e,
+        0x47,
+        0x0d,
+        0x0a,
+        0x1a,
+        0x0a, // PNG signature
+        0x00,
+        0x00,
+        0x00,
+        0x0d, // IHDR chunk length
+        0x49,
+        0x48,
+        0x44,
+        0x52, // IHDR
+        0x00,
+        0x00,
+        0x00,
+        0x64, // width: 100
+        0x00,
+        0x00,
+        0x00,
+        0x64, // height: 100
+        0x08,
+        0x02,
+        0x00,
+        0x00,
+        0x00, // bit depth, color type, etc.
+        0x90,
+        0x77,
+        0x53,
+        0xde, // CRC
       ]);
 
       const attachment: Attachment = {
@@ -106,9 +132,27 @@ END:VCALENDAR`;
     it('should process JPEG images', async() => {
       // Create a minimal JPEG file
       const jpegHeader = Buffer.from([
-        0xFF, 0xD8, 0xFF, 0xE0, // JPEG signature
-        0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, // JFIF header
-        0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+        0xff,
+        0xd8,
+        0xff,
+        0xe0, // JPEG signature
+        0x00,
+        0x10,
+        0x4a,
+        0x46,
+        0x49,
+        0x46,
+        0x00,
+        0x01, // JFIF header
+        0x01,
+        0x01,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
       ]);
 
       const attachment: Attachment = {
@@ -128,10 +172,38 @@ END:VCALENDAR`;
     it('should process GIF images', async() => {
       // Create a minimal GIF file
       const gifHeader = Buffer.from([
-        0x47, 0x49, 0x46, 0x38, 0x39, 0x61, // GIF89a signature
-        0x64, 0x00, // width: 100
-        0x64, 0x00, // height: 100
-        0x80, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x64, 0x00, 0x64, 0x00, 0x00, 0x02, 0x00, 0x3B,
+        0x47,
+        0x49,
+        0x46,
+        0x38,
+        0x39,
+        0x61, // GIF89a signature
+        0x64,
+        0x00, // width: 100
+        0x64,
+        0x00, // height: 100
+        0x80,
+        0x00,
+        0x00,
+        0xff,
+        0xff,
+        0xff,
+        0x00,
+        0x00,
+        0x00,
+        0x2c,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x64,
+        0x00,
+        0x64,
+        0x00,
+        0x00,
+        0x02,
+        0x00,
+        0x3b,
       ]);
 
       const attachment: Attachment = {
@@ -206,7 +278,8 @@ startxref
     it('should process Word documents', async() => {
       const attachment: Attachment = {
         filename: 'test.docx',
-        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        contentType:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         size: 1024,
         content: Buffer.alloc(1024),
       };
@@ -305,4 +378,3 @@ startxref
     });
   });
 });
-

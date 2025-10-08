@@ -79,14 +79,20 @@ export class ParsingErrorHandler {
     return headers;
   }
 
-  private parseEmailAddress(addressString: string): { address: string; name: string; original: string } {
+  private parseEmailAddress(addressString: string): {
+    address: string;
+    name: string;
+    original: string;
+  } {
     if (!addressString) {
       return { address: '', name: '', original: '' };
     }
 
     try {
       // Simple email parsing - in production, use a proper library
-      const match = addressString.match(/^\s*(.+?)\s*<\s*(.+?)\s*>\s*$|^\s*(.+?)\s*$/);
+      const match = addressString.match(
+        /^\s*(.+?)\s*<\s*(.+?)\s*>\s*$|^\s*(.+?)\s*$/,
+      );
 
       if (match) {
         if (match[2]) {
@@ -116,7 +122,9 @@ export class ParsingErrorHandler {
     };
   }
 
-  private parseEmailAddresses(addressString: string): Array<{ address: string; name: string; original: string }> {
+  private parseEmailAddresses(
+    addressString: string,
+  ): Array<{ address: string; name: string; original: string }> {
     if (!addressString) return [];
 
     try {

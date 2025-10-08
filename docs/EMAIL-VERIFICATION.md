@@ -5,6 +5,7 @@ This guide walks you through verifying your email domain with AWS SES and settin
 ## 🎯 Overview
 
 To send emails through AWS SES, you need to:
+
 1. **Verify your domain** in AWS SES
 2. **Set up DNS records** for email authentication (SPF, DMARC, DKIM)
 3. **Configure Route 53** to manage your domain's DNS
@@ -123,6 +124,7 @@ done
 After completing all steps, you should have these DNS records:
 
 ### ✅ SPF Record
+
 ```
 Name: yourdomain.com
 Type: TXT
@@ -130,6 +132,7 @@ Value: v=spf1 include:amazonses.com ~all
 ```
 
 ### ✅ DMARC Record
+
 ```
 Name: _dmarc.yourdomain.com
 Type: TXT
@@ -137,6 +140,7 @@ Value: v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com
 ```
 
 ### ✅ SES Domain Verification
+
 ```
 Name: _amazonses.yourdomain.com
 Type: TXT
@@ -144,6 +148,7 @@ Value: [Your SES verification token]
 ```
 
 ### ✅ DKIM Records
+
 ```
 Name: dkim1._domainkey.yourdomain.com
 Type: TXT
@@ -198,16 +203,19 @@ dig TXT dkim3._domainkey.yourdomain.com
 ## 🚨 Troubleshooting
 
 ### Domain Not Verified
+
 - Check that the `_amazonses.yourdomain.com` TXT record contains the correct token
 - Ensure the token is wrapped in quotes: `"your-token-here"`
 - Wait for DNS propagation (up to 48 hours)
 
 ### DKIM Not Working
+
 - Verify all 3 DKIM records are created
 - Check that DKIM tokens match exactly
 - Ensure DKIM is enabled in SES
 
 ### SPF/DMARC Issues
+
 - Verify SPF record includes `include:amazonses.com`
 - Check DMARC record format and email address
 - Test with online SPF/DMARC validators

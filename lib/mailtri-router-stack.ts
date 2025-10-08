@@ -91,10 +91,14 @@ export class MailtriRouterStack extends cdk.Stack {
     this.processedQueue.grantSendMessages(this.emailProcessor);
 
     // SES Configuration Set
-    const sesConfigurationSet = new ses.ConfigurationSet(this, 'SESConfigurationSet', {
-      configurationSetName: 'mailtri-router',
-      sendingEnabled: true,
-    });
+    const sesConfigurationSet = new ses.ConfigurationSet(
+      this,
+      'SESConfigurationSet',
+      {
+        configurationSetName: 'mailtri-router',
+        sendingEnabled: true,
+      },
+    );
 
     // IAM Role for SES to access S3 (created but not used in CDK due to SES limitations)
     new iam.Role(this, 'SESRole', {

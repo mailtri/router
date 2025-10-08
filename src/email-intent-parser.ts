@@ -1,5 +1,5 @@
 /**
- * Email parsing utilities for mailtri-router
+ * Email intent parsing utilities for mailtri-router
  */
 
 export interface EmailIntent {

@@ -39,7 +39,9 @@ describe('Email Parser Integration Tests', () => {
       expect(result.from.address).toBe('sender@example.com');
       expect(result.to[0]?.address).toBe('user+task@example.com');
       expect(result.subject).toBe('Create Task');
-      expect(result.body.normalized).toBe('Please create a new task for implementing user authentication.');
+      expect(result.body.normalized).toBe(
+        'Please create a new task for implementing user authentication.',
+      );
       // Commands functionality removed
     });
   });
@@ -107,8 +109,12 @@ describe('Email Parser Integration Tests', () => {
       expect(result.from.address).toBe('test@example.com');
       expect(result.to[0]?.address).toBe('recipient@example.com');
       expect(result.subject).toBe('Base64 Test');
-      expect(result.body.normalized).toContain('test email with base64 encoding');
-      expect(result.body.normalized).toContain('line breaks and special characters');
+      expect(result.body.normalized).toContain(
+        'test email with base64 encoding',
+      );
+      expect(result.body.normalized).toContain(
+        'line breaks and special characters',
+      );
     });
   });
 
@@ -122,19 +128,29 @@ describe('Email Parser Integration Tests', () => {
       expect(result.from.address).toBe('test@example.com');
       expect(result.to[0]?.address).toBe('recipient@example.com');
       expect(result.subject).toBe('Calendar Event');
-      expect(result.body.normalized).toBe('Please find the calendar event attached.');
+      expect(result.body.normalized).toBe(
+        'Please find the calendar event attached.',
+      );
       expect(result.attachments).toHaveLength(1);
       expect(result.attachments[0]?.filename).toBe('event.ics');
       expect(result.attachments[0]?.contentType).toBe('text/calendar');
 
       // Process the attachment
-      const processedAttachment = await attachmentProcessor.processAttachment(result.attachments[0]!);
+      const processedAttachment = await attachmentProcessor.processAttachment(
+        result.attachments[0]!,
+      );
       expect(processedAttachment.processed).toBe(true);
       expect(processedAttachment.metadata.type).toBe('calendar');
       expect(processedAttachment.metadata.events).toHaveLength(1);
-      expect(processedAttachment.metadata.events[0].summary).toBe('Test Meeting');
-      expect(processedAttachment.metadata.events[0].start).toBe('20240101T120000Z');
-      expect(processedAttachment.metadata.events[0].end).toBe('20240101T130000Z');
+      expect(processedAttachment.metadata.events[0].summary).toBe(
+        'Test Meeting',
+      );
+      expect(processedAttachment.metadata.events[0].start).toBe(
+        '20240101T120000Z',
+      );
+      expect(processedAttachment.metadata.events[0].end).toBe(
+        '20240101T130000Z',
+      );
     });
   });
 

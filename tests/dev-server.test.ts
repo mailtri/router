@@ -2,7 +2,7 @@
  * Tests for the development server
  */
 
-import { parseEmailIntent } from '../dev/email-parser';
+import { parseEmailIntent } from '../src/email-intent-parser';
 
 // Mock the server implementation
 jest.mock('http', () => ({

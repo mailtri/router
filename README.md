@@ -47,6 +47,7 @@ nvm use 20
 📖 **See [Node.js Setup Guide](docs/NODE-SETUP.md) for detailed instructions.**
 
 **Quick version check:**
+
 ```bash
 npm run check:node
 ```
@@ -54,6 +55,7 @@ npm run check:node
 ### ☁️ AWS Setup
 
 1. **Configure AWS credentials** (see [AWS Setup Guide](docs/AWS-SETUP.md)):
+
    ```bash
    aws configure
    ```
@@ -66,6 +68,7 @@ npm run check:node
 ### 🚀 Deploy to AWS
 
 #### Option 1: Using the Deployment Script (Recommended)
+
 ```bash
 # Install dependencies
 npm install
@@ -75,6 +78,7 @@ npm run deploy:domain yourdomain.com
 ```
 
 #### Option 2: Manual Deployment
+
 ```bash
 # Install dependencies
 npm install
@@ -99,6 +103,7 @@ aws ses verify-domain-identity --domain yourdomain.com
 The deployment automatically creates these DNS records in your Route 53 hosted zone:
 
 ### ✅ SPF Record
+
 ```
 Name: yourdomain.com
 Type: TXT
@@ -106,6 +111,7 @@ Value: v=spf1 include:amazonses.com ~all
 ```
 
 ### ✅ DMARC Record
+
 ```
 Name: _dmarc.yourdomain.com
 Type: TXT
@@ -113,6 +119,7 @@ Value: v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com
 ```
 
 ### ✅ SES Domain Verification
+
 ```
 Name: _amazonses.yourdomain.com
 Type: TXT
@@ -120,6 +127,7 @@ Value: [Updated after SES verification]
 ```
 
 ### ✅ DKIM Records
+
 ```
 Name: dkim1._domainkey.yourdomain.com
 Name: dkim2._domainkey.yourdomain.com
@@ -133,6 +141,7 @@ Value: [Updated after DKIM setup]
 ## 🏠 Local Development
 
 ### 🐳 Start Local Services
+
 ```bash
 # Start local services (LocalStack + Mailpit)
 docker-compose up -d
@@ -140,22 +149,250 @@ docker-compose up -d
 # Initialize services (creates S3 buckets, SQS queues)
 npm run dev:init
 
-# Run local development server
+# Run email router in local mode
 npm run dev
 ```
 
 ### 📧 Test Email Processing
+
 ```bash
 # Send test email to local server
 curl -X POST http://localhost:3030/webhook \
   -H "Content-Type: application/json" \
-  -d '{"to": "task+notion@your-domain.com", "subject": "Create task", "body": "New feature request"}'
+  -d '{"messageId": "test-123", "from": "test@example.com", "to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}'
+
+# Check health status
+curl http://localhost:3030/health
 
 # View emails in Mailpit Web UI
 open http://localhost:8025
 ```
 
+### 🔧 Environment Configuration
+
+The router automatically detects the environment and configures itself via `.env` files:
+
+**Environment File Loading Order (highest to lowest precedence):**
+
+1. System environment variables
+2. `.env.local` (local overrides)
+3. `.env` (default configuration)
+
+**Setup Environment File:**
+
+```bash
+# Copy the example environment file
+cp env.example .env
+
+# Edit the configuration as needed
+nano .env
+```
+
+**Local Development Configuration:**
+
+```bash
+# .env file for local development
+IS_LOCAL=true
+PORT=3030
+AWS_ENDPOINT_URL=http://localhost:4566
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+S3_BUCKET=mailtri-emails
+SQS_QUEUE_NAME=mailtri-processed-emails
+```
+
+**Production Configuration:**
+
+```bash
+# .env file for production
+IS_LOCAL=false
+S3_BUCKET=mailtri-emails-{account}-{region}
+SQS_QUEUE_NAME=mailtri-processed-emails
+WEBHOOK_URL=https://your-webhook-endpoint.com/email-notifications
+```
+
+### 📝 Logging Configuration
+
+The router uses Winston for structured logging with different levels and outputs:
+
+#### **Log Levels**
+- `error`: Error messages only
+- `warn`: Warning and error messages
+- `info`: Info, warning, and error messages (default for production)
+- `http`: HTTP requests, info, warning, and error messages
+- `debug`: All messages including debug information (default for local development)
+
+#### **Environment Configuration**
+```bash
+# Set log level via environment variable
+LOG_LEVEL=info  # Production: info, warn, error
+LOG_LEVEL=debug # Development: all messages
+```
+
+#### **Log Outputs**
+- **Local Development**: Colored console output with timestamps
+- **Production**: JSON formatted logs (perfect for CloudWatch)
+- **Lambda**: Automatically sends logs to CloudWatch Logs
+
+#### **CloudWatch Integration**
+In production (AWS Lambda), logs are automatically sent to CloudWatch Logs with:
+- **Log Group**: `/aws/lambda/mailtri-router`
+- **Structured JSON**: Easy to query and filter
+- **Log Retention**: Configurable via CDK
+
+#### **Example Log Output**
+```json
+{
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "level": "info",
+  "message": "Processing email",
+  "subject": "Create new task",
+  "messageId": "test-123"
+}
+```
+
+### 🔗 Unified Webhook System
+
+The system uses a single webhook URL that receives different types of notifications based on the `type` parameter:
+
+#### 📥 **Receipt Notification** (`type: "email_received"`)
+- **When**: Sent immediately when email is received (before any processing)
+- **Purpose**: Real-time email receipt notifications
+- **Payload**: Basic email info (from, to, subject, hasBody, hasHtml)
+- **Use Case**: Show users that their email was received
+
+#### ✅ **Processing Notification** (`type: "email_processed"`)
+- **When**: Sent after successful processing and storage
+- **Purpose**: Confirm email was fully processed
+- **Payload**: Complete email data including parsed content, CC/BCC, attachments
+- **Use Case**: Trigger downstream workflows, update databases
+
+**Example Webhook Payloads:**
+
+**Receipt Notification:**
+```json
+{
+  "type": "email_received",
+  "messageId": "test-123",
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "source": "local",
+  "email": {
+    "from": "user@example.com",
+    "to": "task+notion@example.com",
+    "cc": "cc1@example.com",
+    "bcc": "bcc1@example.com",
+    "subject": "Create new task",
+    "hasBody": true,
+    "hasHtml": false
+  }
+}
+```
+
+**Processing Notification:**
+```json
+{
+  "type": "email_processed",
+  "messageId": "test-123",
+  "s3Key": "emails/1704067200000/test-123.json",
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "source": "local",
+  "email": {
+    "from": "user@example.com",
+    "to": "task+notion@example.com",
+    "cc": "cc1@example.com, cc2@example.com",
+    "bcc": "bcc1@example.com",
+    "subject": "Create new task",
+    "body": "Please create a new task for project X",
+    "html": "<p>Please create a new task for project X</p>",
+    "attachmentsCount": 2
+  }
+}
+```
+
+**Webhook Handler Example:**
+```javascript
+app.post('/email-notifications', (req, res) => {
+  const { type, messageId, email } = req.body;
+  
+  switch (type) {
+    case 'email_received':
+      // Show user their email was received
+      notifyUser(email.from, 'Email received successfully');
+      break;
+      
+    case 'email_processed':
+      // Trigger downstream processing
+      processEmail(email);
+      break;
+  }
+  
+  res.status(200).json({ success: true });
+});
+```
+
+### 🎛️ Production Log Control
+
+#### **Setting Log Levels in Production**
+
+**Via Environment Variables (Recommended):**
+```bash
+# Set in your deployment configuration
+LOG_LEVEL=info  # Show info, warn, error logs
+LOG_LEVEL=warn  # Show only warn and error logs
+LOG_LEVEL=error # Show only error logs
+```
+
+**Via AWS Lambda Environment Variables:**
+```bash
+# In your CDK deployment or AWS Console
+aws lambda update-function-configuration \
+  --function-name mailtri-router \
+  --environment Variables='{LOG_LEVEL=info}'
+```
+
+**Via CDK (Infrastructure as Code):**
+```typescript
+// In your CDK stack
+const lambdaFunction = new Function(this, 'MailtriRouter', {
+  // ... other config
+  environment: {
+    LOG_LEVEL: 'info', // or 'warn', 'error'
+  },
+});
+```
+
+#### **CloudWatch Log Queries**
+
+With structured JSON logging, you can easily query logs in CloudWatch:
+
+```sql
+-- Find all error logs
+fields @timestamp, level, message, error
+| filter level = "error"
+
+-- Find logs for specific email processing
+fields @timestamp, message, messageId, subject
+| filter message = "Processing email"
+
+-- Find webhook failures
+fields @timestamp, level, message, status
+| filter message = "Processing webhook failed"
+```
+
+#### **Log Retention and Costs**
+
+Configure log retention in your CDK stack to control costs:
+
+```typescript
+// Set log retention (default is "never expire")
+const logGroup = new LogGroup(this, 'MailtriRouterLogs', {
+  logGroupName: '/aws/lambda/mailtri-router',
+  retention: RetentionDays.ONE_WEEK, // or ONE_MONTH, THREE_MONTHS, etc.
+});
+```
+
 ### 🛠️ Development Commands
+
 ```bash
 # Stop local services
 npm run dev:stop
@@ -169,7 +406,35 @@ npm test
 # Run linting
 npm run lint
 npm run lint:fix
+
+# Format code with Prettier
+npm run format
+
+# Check code formatting
+npm run format:check
+
+# Run development with auto-formatting
+npm run dev:format
+
+# Pre-commit checks (format + lint + test)
+npm run pre-commit
 ```
+
+### 🎨 Code Quality Tools
+
+The project uses several tools to maintain code quality:
+
+- **Prettier**: Code formatting with consistent style
+- **ESLint**: Code linting and best practices
+- **Jest**: Unit and integration testing
+- **TypeScript**: Type safety and better development experience
+
+**Configuration Files:**
+
+- `.prettierrc` - Prettier formatting rules
+- `.prettierignore` - Files to ignore during formatting
+- `.eslintrc.js` - ESLint configuration
+- `jest.config.js` - Jest testing configuration
 
 ## 🏗️ Architecture
 
@@ -270,6 +535,7 @@ The router outputs standardized JSON payloads to SQS:
 ## 🛠️ Available Scripts
 
 ### 🏠 Development
+
 ```bash
 npm run dev            # Start local development server
 npm run dev:init       # Initialize local services
@@ -278,6 +544,7 @@ npm run dev:clean      # Clean up local environment
 ```
 
 ### 🧪 Testing & Quality
+
 ```bash
 npm run test           # Run all tests
 npm run test:watch     # Run tests in watch mode
@@ -290,6 +557,7 @@ npm run lint:fix       # Fix linting issues
 ```
 
 ### 🏗️ Building & Deployment
+
 ```bash
 npm run build          # Build TypeScript
 npm run deploy         # Deploy to AWS
@@ -300,11 +568,13 @@ npm run cdk:destroy    # Destroy infrastructure
 ```
 
 ### 🔧 Utilities
+
 ```bash
 npm run check:node     # Check Node.js version
 ```
 
 ### 📦 Lambda Package Building
+
 ```bash
 # Build Lambda deployment package
 ./scripts/build-lambda-package.sh
@@ -316,26 +586,31 @@ npm run check:node     # Check Node.js version
 ## 📚 Documentation
 
 ### 🚀 Getting Started
+
 - 📖 [AWS Setup Guide](docs/AWS-SETUP.md) - Configure AWS credentials and permissions
 - 🚀 [Deployment Guide](docs/DEPLOYMENT.md) - Deploy infrastructure to AWS
 - 📦 [Node.js Setup](docs/NODE-SETUP.md) - Install and manage Node.js versions
 
 ### 🌐 Domain & Email Setup
+
 - 🌐 [Route 53 Setup](docs/ROUTE53-SETUP.md) - Configure DNS for email routing
 - 🌐 [Route 53 Integration](docs/ROUTE53-INTEGRATION.md) - CDK Route 53 integration details
 - ✉️ [Email Verification](docs/EMAIL-VERIFICATION.md) - Verify domains and set up DKIM
 
 ### 🏗️ Architecture & Development
+
 - 🏗️ [CDK Infrastructure](docs/CDK-INFRASTRUCTURE.md) - Detailed infrastructure documentation
 - 🧪 [Testing Guide](docs/TESTING.md) - Running tests and test coverage
 - 🔧 [Development Guide](docs/DEVELOPMENT.md) - Local development setup
 
 ### 📦 Scripts & Utilities
+
 - `./scripts/deploy-with-domain.sh` - Deploy with domain configuration
 - `./scripts/build-lambda-package.sh` - Build Lambda deployment package
 - `./scripts/check-node-version.sh` - Verify Node.js version compatibility
 
 ### 🚀 CI/CD Pipeline
+
 - **`.github/workflows/ci.yml`** - Main CI pipeline (tests, build, lint, security)
 - **`.github/workflows/release.yml`** - Automated releases
 - **`.github/workflows/dependencies.yml`** - Dependency management
@@ -347,6 +622,7 @@ npm run check:node     # Check Node.js version
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started.
 
 ### 🧪 Development Workflow
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
@@ -359,12 +635,14 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Common Issues
 
 #### Port Already in Use
+
 ```bash
 # If port 3000 is in use, the dev server will use 3030
 npm run dev
 ```
 
 #### LocalStack Services Not Ready
+
 ```bash
 # Ensure services are initialized
 npm run dev:init
@@ -374,6 +652,7 @@ docker-compose ps
 ```
 
 #### Node.js Version Issues
+
 ```bash
 # Check current version
 npm run check:node
@@ -383,6 +662,7 @@ nvm use
 ```
 
 #### CDK Deployment Issues
+
 ```bash
 # Check AWS credentials
 aws sts get-caller-identity
@@ -397,6 +677,7 @@ npx cdk context
 ### 🚨 Quick Reference
 
 #### Essential Commands
+
 ```bash
 # Start development
 npm run dev:init && npm run dev
@@ -412,10 +693,21 @@ npm run check:node && npm run lint && npm test
 ```
 
 #### Service URLs (Local Development)
-- **Development Server**: http://localhost:3030
+
+- **Development Server**: http://localhost:3030 (auto-reloads on code changes)
 - **Mailpit Web UI**: http://localhost:8025
 - **LocalStack**: http://localhost:4566
 - **Health Check**: http://localhost:3030/health
+
+#### Auto-Reload Development
+
+The development server uses `nodemon` to automatically restart when you make changes to the code:
+
+```bash
+npm run dev  # Starts with auto-reload enabled
+```
+
+The server will automatically restart when you modify files in the `src/` directory. You can also manually restart by typing `rs` in the terminal.
 
 ## 🔒 Security
 

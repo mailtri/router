@@ -38,6 +38,7 @@ SES → Lambda → S3 + SQS
 ### Prerequisites
 
 1. **AWS CLI configured**:
+
    ```bash
    aws configure
    ```
@@ -84,16 +85,19 @@ The Lambda function uses these environment variables:
 After deployment, configure SES:
 
 1. **Verify domain**:
+
    ```bash
    aws ses verify-domain-identity --domain your-domain.com
    ```
 
 2. **Create rule set**:
+
    ```bash
    aws ses create-receipt-rule-set --rule-set-name mailtri-router
    ```
 
 3. **Create receipt rule**:
+
    ```bash
    aws ses create-receipt-rule \
      --rule-set-name mailtri-router \
@@ -122,6 +126,7 @@ Monitor these key metrics:
 ### Logs
 
 Lambda logs are available in CloudWatch:
+
 ```
 /aws/lambda/mailtri-email-processor
 ```
@@ -161,6 +166,7 @@ The stack creates least-privilege IAM roles:
 ### Common Issues
 
 1. **CDK Bootstrap Failed**
+
    ```bash
    aws sts get-caller-identity
    npx cdk bootstrap --force

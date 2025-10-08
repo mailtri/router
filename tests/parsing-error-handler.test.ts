@@ -28,7 +28,9 @@ describe('ParsingErrorHandler', () => {
       const emailData = Buffer.from('Completely invalid data');
 
       // Mock the extractBasicInfo to throw an error
-      jest.spyOn(errorHandler as any, 'extractBasicInfo').mockRejectedValue(new Error('Basic extraction failed'));
+      jest
+        .spyOn(errorHandler as any, 'extractBasicInfo')
+        .mockRejectedValue(new Error('Basic extraction failed'));
 
       const result = await errorHandler.handleParsingError(error, emailData);
 
@@ -102,7 +104,9 @@ To: another@example.com`;
     });
 
     it('should handle invalid email content', () => {
-      const headers = errorHandler['extractHeaders'](Buffer.from('Invalid content without headers'));
+      const headers = errorHandler['extractHeaders'](
+        Buffer.from('Invalid content without headers'),
+      );
 
       expect(headers).toEqual({});
     });
@@ -110,7 +114,9 @@ To: another@example.com`;
 
   describe('Email Address Parsing', () => {
     it('should parse email address with name', () => {
-      const result = errorHandler['parseEmailAddress']('John Doe <john@example.com>');
+      const result = errorHandler['parseEmailAddress'](
+        'John Doe <john@example.com>',
+      );
 
       expect(result.address).toBe('john@example.com');
       expect(result.name).toBe('John Doe');
@@ -142,7 +148,9 @@ To: another@example.com`;
     });
 
     it('should handle email address with extra spaces', () => {
-      const result = errorHandler['parseEmailAddress']('  John Doe  <  john@example.com  >  ');
+      const result = errorHandler['parseEmailAddress'](
+        '  John Doe  <  john@example.com  >  ',
+      );
 
       expect(result.address).toBe('john@example.com');
       expect(result.name).toBe('John Doe');
@@ -152,7 +160,9 @@ To: another@example.com`;
 
   describe('Email Addresses Parsing', () => {
     it('should parse multiple email addresses', () => {
-      const result = errorHandler['parseEmailAddresses']('john@example.com, Jane Doe <jane@example.com>, bob@example.com');
+      const result = errorHandler['parseEmailAddresses'](
+        'john@example.com, Jane Doe <jane@example.com>, bob@example.com',
+      );
 
       expect(result).toHaveLength(3);
       expect(result[0]?.address).toBe('john@example.com');
@@ -177,7 +187,9 @@ To: another@example.com`;
     });
 
     it('should handle malformed email addresses', () => {
-      const result = errorHandler['parseEmailAddresses']('invalid-email, another-invalid');
+      const result = errorHandler['parseEmailAddresses'](
+        'invalid-email, another-invalid',
+      );
 
       expect(result).toHaveLength(2);
       expect(result[0]?.address).toBe('invalid-email');
@@ -195,7 +207,9 @@ Message-ID: <test@example.com>
 
 This is the email body.`;
 
-      const result = await errorHandler['extractBasicInfo'](Buffer.from(emailContent));
+      const result = await errorHandler['extractBasicInfo'](
+        Buffer.from(emailContent),
+      );
 
       expect(result.messageId).toBe('<test@example.com>');
       expect(result.from.address).toBe('john@example.com');
@@ -215,7 +229,9 @@ This is the email body.`;
 
 This is the email body.`;
 
-      const result = await errorHandler['extractBasicInfo'](Buffer.from(emailContent));
+      const result = await errorHandler['extractBasicInfo'](
+        Buffer.from(emailContent),
+      );
 
       expect(result.messageId).toBe('unknown');
       expect(result.from.address).toBe('');
@@ -253,4 +269,3 @@ This is the email body.`;
     });
   });
 });
-

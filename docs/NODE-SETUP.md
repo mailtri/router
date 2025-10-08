@@ -15,33 +15,37 @@ This guide covers setting up Node.js 20 for the Mailtri Router project.
 1. **Install nvm** (if not already installed):
 
    **macOS/Linux:**
+
    ```bash
    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
    ```
 
    **Windows:**
+
    ```bash
    # Use nvm-windows
    # Download from: https://github.com/coreybutler/nvm-windows
    ```
 
 2. **Install and use Node.js 20:**
+
    ```bash
    # Install Node.js 20
    nvm install 20
-   
+
    # Use Node.js 20
    nvm use 20
-   
+
    # Set as default
    nvm alias default 20
    ```
 
 3. **Use project's Node version:**
+
    ```bash
    # Navigate to project directory
    cd mailtri-router
-   
+
    # Use the Node version specified in .nvmrc
    nvm use
    ```
@@ -103,6 +107,7 @@ nvm install
 You can configure your shell to automatically switch Node versions:
 
 **Bash/Zsh:**
+
 ```bash
 # Add to your ~/.bashrc or ~/.zshrc
 autoload -U add-zsh-hook
@@ -150,31 +155,35 @@ strategy:
 ### Common Issues
 
 1. **Node version mismatch:**
+
    ```bash
    # Check current Node version
    node --version
-   
+
    # Use correct version
    nvm use 20
    ```
 
 2. **npm version issues:**
+
    ```bash
    # Update npm to latest
    npm install -g npm@latest
    ```
 
 3. **Permission issues:**
+
    ```bash
    # Fix npm permissions (Linux/macOS)
    sudo chown -R $(whoami) ~/.npm
    ```
 
 4. **Cache issues:**
+
    ```bash
    # Clear npm cache
    npm cache clean --force
-   
+
    # Remove node_modules and reinstall
    rm -rf node_modules package-lock.json
    npm install
@@ -213,6 +222,7 @@ Node.js 20 includes several performance improvements:
 ### Memory Usage
 
 For the Lambda function, we use:
+
 - **Memory**: 512MB
 - **Timeout**: 5 minutes
 - **Runtime**: Node.js 20.x

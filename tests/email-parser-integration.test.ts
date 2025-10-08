@@ -18,7 +18,7 @@ describe('Email Parser Integration Tests', () => {
   };
 
   describe('Simple Email Processing', () => {
-    it('should process simple email fixture', async () => {
+    it('should process simple email fixture', async() => {
       const emailContent = loadEmailFixture('simple-email.eml');
       const result = await parser.parseEmail(emailContent);
 
@@ -32,7 +32,7 @@ describe('Email Parser Integration Tests', () => {
   });
 
   describe('Plus-Addressed Email Processing', () => {
-    it('should process plus-addressed email fixture', async () => {
+    it('should process plus-addressed email fixture', async() => {
       const emailContent = loadEmailFixture('plus-addressed-email.eml');
       const result = await parser.parseEmail(emailContent);
 
@@ -40,14 +40,14 @@ describe('Email Parser Integration Tests', () => {
       expect(result.to[0]?.address).toBe('user+task@example.com');
       expect(result.subject).toBe('Create Task');
       expect(result.body.normalized).toBe(
-        'Please create a new task for implementing user authentication.'
+        'Please create a new task for implementing user authentication.',
       );
       // Commands functionality removed
     });
   });
 
   describe('Multipart Email Processing', () => {
-    it('should process multipart/alternative email fixture', async () => {
+    it('should process multipart/alternative email fixture', async() => {
       const emailContent = loadEmailFixture('multipart-alternative.eml');
       const result = await parser.parseEmail(emailContent);
 
@@ -60,7 +60,7 @@ describe('Email Parser Integration Tests', () => {
       expect(result.attachments).toHaveLength(0);
     });
 
-    it('should process multipart/mixed email fixture', async () => {
+    it('should process multipart/mixed email fixture', async() => {
       const emailContent = loadEmailFixture('multipart-mixed.eml');
       const result = await parser.parseEmail(emailContent);
 
@@ -77,7 +77,7 @@ describe('Email Parser Integration Tests', () => {
   });
 
   describe('Unicode Email Processing', () => {
-    it('should process Unicode email fixture', async () => {
+    it('should process Unicode email fixture', async() => {
       const emailContent = loadEmailFixture('unicode-email.eml');
       const result = await parser.parseEmail(emailContent);
 
@@ -91,7 +91,7 @@ describe('Email Parser Integration Tests', () => {
   });
 
   describe('Encoding Email Processing', () => {
-    it('should process quoted-printable email fixture', async () => {
+    it('should process quoted-printable email fixture', async() => {
       const emailContent = loadEmailFixture('quoted-printable.eml');
       const result = await parser.parseEmail(emailContent);
 
@@ -102,7 +102,7 @@ describe('Email Parser Integration Tests', () => {
       expect(result.body.normalized).toContain('special characters like this');
     });
 
-    it('should process base64 email fixture', async () => {
+    it('should process base64 email fixture', async() => {
       const emailContent = loadEmailFixture('base64-email.eml');
       const result = await parser.parseEmail(emailContent);
 
@@ -110,10 +110,10 @@ describe('Email Parser Integration Tests', () => {
       expect(result.to[0]?.address).toBe('recipient@example.com');
       expect(result.subject).toBe('Base64 Test');
       expect(result.body.normalized).toContain(
-        'test email with base64 encoding'
+        'test email with base64 encoding',
       );
       expect(result.body.normalized).toContain(
-        'line breaks and special characters'
+        'line breaks and special characters',
       );
     });
   });
@@ -121,7 +121,7 @@ describe('Email Parser Integration Tests', () => {
   // Command extraction tests removed - AI will handle intent extraction downstream
 
   describe('Attachment Processing Integration', () => {
-    it('should process ICS attachment fixture', async () => {
+    it('should process ICS attachment fixture', async() => {
       const emailContent = loadEmailFixture('ics-attachment.eml');
       const result = await parser.parseEmail(emailContent);
 
@@ -129,7 +129,7 @@ describe('Email Parser Integration Tests', () => {
       expect(result.to[0]?.address).toBe('recipient@example.com');
       expect(result.subject).toBe('Calendar Event');
       expect(result.body.normalized).toBe(
-        'Please find the calendar event attached.'
+        'Please find the calendar event attached.',
       );
       expect(result.attachments).toHaveLength(1);
       expect(result.attachments[0]?.filename).toBe('event.ics');
@@ -137,25 +137,25 @@ describe('Email Parser Integration Tests', () => {
 
       // Process the attachment
       const processedAttachment = await attachmentProcessor.processAttachment(
-        result.attachments[0]!
+        result.attachments[0]!,
       );
       expect(processedAttachment.processed).toBe(true);
       expect(processedAttachment.metadata.type).toBe('calendar');
       expect(processedAttachment.metadata.events).toHaveLength(1);
       expect(processedAttachment.metadata.events[0].summary).toBe(
-        'Test Meeting'
+        'Test Meeting',
       );
       expect(processedAttachment.metadata.events[0].start).toBe(
-        '20240101T120000Z'
+        '20240101T120000Z',
       );
       expect(processedAttachment.metadata.events[0].end).toBe(
-        '20240101T130000Z'
+        '20240101T130000Z',
       );
     });
   });
 
   describe('Error Handling Integration', () => {
-    it('should handle malformed email fixture', async () => {
+    it('should handle malformed email fixture', async() => {
       const emailContent = loadEmailFixture('malformed-email.eml');
 
       // This should not throw an error
@@ -167,7 +167,7 @@ describe('Email Parser Integration Tests', () => {
       expect(result.body.normalized).toContain('malformed email');
     });
 
-    it('should handle completely invalid email content', async () => {
+    it('should handle completely invalid email content', async() => {
       const invalidContent = Buffer.from('This is not a valid email format');
 
       try {
@@ -180,7 +180,7 @@ describe('Email Parser Integration Tests', () => {
   });
 
   describe('End-to-End Processing', () => {
-    it('should process email with all components', async () => {
+    it('should process email with all components', async() => {
       const emailContent = loadEmailFixture('command-extraction.eml');
 
       // Parse email
@@ -191,8 +191,8 @@ describe('Email Parser Integration Tests', () => {
       // Process attachments
       const processedAttachments = await Promise.all(
         parsedEmail.attachments.map(attachment =>
-          attachmentProcessor.processAttachment(attachment)
-        )
+          attachmentProcessor.processAttachment(attachment),
+        ),
       );
 
       expect(parsedEmail.from.address).toBe('sender@example.com');
@@ -203,7 +203,7 @@ describe('Email Parser Integration Tests', () => {
   });
 
   describe('Performance Tests', () => {
-    it('should process emails within acceptable time limits', async () => {
+    it('should process emails within acceptable time limits', async() => {
       const emailContent = loadEmailFixture('multipart-mixed.eml');
 
       const startTime = Date.now();
@@ -214,7 +214,7 @@ describe('Email Parser Integration Tests', () => {
       expect(result.attachments).toHaveLength(2);
     });
 
-    it('should handle large email content efficiently', async () => {
+    it('should handle large email content efficiently', async() => {
       // Create a large email content
       const largeBody = 'This is a test email body. '.repeat(10000);
       const emailContent = Buffer.from(`From: test@example.com

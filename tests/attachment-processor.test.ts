@@ -9,7 +9,7 @@ describe('AttachmentProcessor', () => {
   });
 
   describe('ICS File Processing', () => {
-    it('should process ICS calendar files', async () => {
+    it('should process ICS calendar files', async() => {
       const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Test//Test//EN
@@ -40,7 +40,7 @@ END:VCALENDAR`;
       expect(result.metadata.events[0].end).toBe('20240101T130000Z');
     });
 
-    it('should handle multiple events in ICS file', async () => {
+    it('should handle multiple events in ICS file', async() => {
       const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Test//Test//EN
@@ -75,7 +75,7 @@ END:VCALENDAR`;
   });
 
   describe('Image Processing', () => {
-    it('should process PNG images', async () => {
+    it('should process PNG images', async() => {
       // Create a minimal PNG file
       const pngHeader = Buffer.from([
         0x89,
@@ -129,7 +129,7 @@ END:VCALENDAR`;
       expect(result.metadata.height).toBe(100);
     });
 
-    it('should process JPEG images', async () => {
+    it('should process JPEG images', async() => {
       // Create a minimal JPEG file
       const jpegHeader = Buffer.from([
         0xff,
@@ -169,7 +169,7 @@ END:VCALENDAR`;
       expect(result.metadata.format).toBe('jpeg');
     });
 
-    it('should process GIF images', async () => {
+    it('should process GIF images', async() => {
       // Create a minimal GIF file
       const gifHeader = Buffer.from([
         0x47,
@@ -224,7 +224,7 @@ END:VCALENDAR`;
   });
 
   describe('Document Processing', () => {
-    it('should process PDF documents', async () => {
+    it('should process PDF documents', async() => {
       const pdfContent = `%PDF-1.4
 1 0 obj
 <<
@@ -275,7 +275,7 @@ startxref
       expect(result.metadata.size).toBe(pdfContent.length);
     });
 
-    it('should process Word documents', async () => {
+    it('should process Word documents', async() => {
       const attachment: Attachment = {
         filename: 'test.docx',
         contentType:
@@ -293,7 +293,7 @@ startxref
   });
 
   describe('Archive Processing', () => {
-    it('should process ZIP archives', async () => {
+    it('should process ZIP archives', async() => {
       const attachment: Attachment = {
         filename: 'test.zip',
         contentType: 'application/zip',
@@ -309,7 +309,7 @@ startxref
       expect(result.metadata.compressedSize).toBe(1024);
     });
 
-    it('should process TAR archives', async () => {
+    it('should process TAR archives', async() => {
       const attachment: Attachment = {
         filename: 'test.tar',
         contentType: 'application/x-tar',
@@ -327,7 +327,7 @@ startxref
   });
 
   describe('Error Handling', () => {
-    it('should handle processing errors gracefully', async () => {
+    it('should handle processing errors gracefully', async() => {
       const attachment: Attachment = {
         filename: 'corrupted.ics',
         contentType: 'text/calendar',
@@ -341,7 +341,7 @@ startxref
       expect(result.error).toBeDefined();
     });
 
-    it('should handle unknown attachment types', async () => {
+    it('should handle unknown attachment types', async() => {
       const attachment: Attachment = {
         filename: 'unknown.xyz',
         contentType: 'application/unknown',

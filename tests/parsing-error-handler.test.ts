@@ -8,7 +8,7 @@ describe('ParsingErrorHandler', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle parsing errors gracefully', async () => {
+    it('should handle parsing errors gracefully', async() => {
       const error = new Error('Parsing failed');
       const emailData = Buffer.from('Invalid email content');
 
@@ -23,7 +23,7 @@ describe('ParsingErrorHandler', () => {
       // Commands functionality removed
     });
 
-    it('should create minimal email structure when basic extraction fails', async () => {
+    it('should create minimal email structure when basic extraction fails', async() => {
       const error = new Error('Complete parsing failure');
       const emailData = Buffer.from('Completely invalid data');
 
@@ -105,7 +105,7 @@ To: another@example.com`;
 
     it('should handle invalid email content', () => {
       const headers = errorHandler['extractHeaders'](
-        Buffer.from('Invalid content without headers')
+        Buffer.from('Invalid content without headers'),
       );
 
       expect(headers).toEqual({});
@@ -115,7 +115,7 @@ To: another@example.com`;
   describe('Email Address Parsing', () => {
     it('should parse email address with name', () => {
       const result = errorHandler['parseEmailAddress'](
-        'John Doe <john@example.com>'
+        'John Doe <john@example.com>',
       );
 
       expect(result.address).toBe('john@example.com');
@@ -149,7 +149,7 @@ To: another@example.com`;
 
     it('should handle email address with extra spaces', () => {
       const result = errorHandler['parseEmailAddress'](
-        '  John Doe  <  john@example.com  >  '
+        '  John Doe  <  john@example.com  >  ',
       );
 
       expect(result.address).toBe('john@example.com');
@@ -161,7 +161,7 @@ To: another@example.com`;
   describe('Email Addresses Parsing', () => {
     it('should parse multiple email addresses', () => {
       const result = errorHandler['parseEmailAddresses'](
-        'john@example.com, Jane Doe <jane@example.com>, bob@example.com'
+        'john@example.com, Jane Doe <jane@example.com>, bob@example.com',
       );
 
       expect(result).toHaveLength(3);
@@ -188,7 +188,7 @@ To: another@example.com`;
 
     it('should handle malformed email addresses', () => {
       const result = errorHandler['parseEmailAddresses'](
-        'invalid-email, another-invalid'
+        'invalid-email, another-invalid',
       );
 
       expect(result).toHaveLength(2);
@@ -198,7 +198,7 @@ To: another@example.com`;
   });
 
   describe('Basic Info Extraction', () => {
-    it('should extract basic information from email', async () => {
+    it('should extract basic information from email', async() => {
       const emailContent = `From: John Doe <john@example.com>
 To: Jane Doe <jane@example.com>, bob@example.com
 Subject: Test Subject
@@ -208,7 +208,7 @@ Message-ID: <test@example.com>
 This is the email body.`;
 
       const result = await errorHandler['extractBasicInfo'](
-        Buffer.from(emailContent)
+        Buffer.from(emailContent),
       );
 
       expect(result.messageId).toBe('<test@example.com>');
@@ -224,13 +224,13 @@ This is the email body.`;
       // Commands functionality removed
     });
 
-    it('should handle missing headers', async () => {
+    it('should handle missing headers', async() => {
       const emailContent = `Subject: Test Subject
 
 This is the email body.`;
 
       const result = await errorHandler['extractBasicInfo'](
-        Buffer.from(emailContent)
+        Buffer.from(emailContent),
       );
 
       expect(result.messageId).toBe('unknown');
@@ -239,7 +239,7 @@ This is the email body.`;
       expect(result.subject).toBe('Test Subject');
     });
 
-    it('should handle empty email content', async () => {
+    it('should handle empty email content', async() => {
       const result = await errorHandler['extractBasicInfo'](Buffer.from(''));
 
       expect(result.messageId).toBe('unknown');

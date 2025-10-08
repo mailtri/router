@@ -11,7 +11,7 @@ export class EmailParsingError extends Error {
   constructor(
     message: string,
     public override cause?: Error,
-    public context?: any
+    public context?: any,
   ) {
     super(message);
     this.name = 'EmailParsingError';
@@ -36,14 +36,14 @@ export class EmailParser {
       // If none of the basic email components are present, consider it malformed
       if (!hasFrom && !hasTo && !hasSubject && !hasBody) {
         throw new Error(
-          'Email appears to be completely malformed - no recognizable email structure found'
+          'Email appears to be completely malformed - no recognizable email structure found',
         );
       }
 
       return {
         messageId: this.extractMessageId(parsed),
         from: this.normalizeEmailAddress(
-          (parsed.from as any)?.value?.[0] || {}
+          (parsed.from as any)?.value?.[0] || {},
         ),
         to: this.normalizeEmailAddresses((parsed.to as any)?.value || []),
         cc: this.normalizeEmailAddresses((parsed.cc as any)?.value || []),
@@ -170,7 +170,7 @@ export class EmailParser {
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
+      .replace(/&#39;/g, '\'')
       .trim();
   }
 }

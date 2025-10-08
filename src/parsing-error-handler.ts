@@ -91,7 +91,7 @@ export class ParsingErrorHandler {
     try {
       // Simple email parsing - in production, use a proper library
       const match = addressString.match(
-        /^\s*(.+?)\s*<\s*(.+?)\s*>\s*$|^\s*(.+?)\s*$/
+        /^\s*(.+?)\s*<\s*(.+?)\s*>\s*$|^\s*(.+?)\s*$/,
       );
 
       if (match) {
@@ -123,7 +123,7 @@ export class ParsingErrorHandler {
   }
 
   private parseEmailAddresses(
-    addressString: string
+    addressString: string,
   ): Array<{ address: string; name: string; original: string }> {
     if (!addressString) return [];
 

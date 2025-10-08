@@ -97,7 +97,7 @@ export class MailtriRouterStack extends cdk.Stack {
       {
         configurationSetName: 'mailtri-router',
         sendingEnabled: true,
-      }
+      },
     );
 
     // IAM Role for SES to access S3 (created but not used in CDK due to SES limitations)

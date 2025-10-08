@@ -12,7 +12,7 @@ describe('Development Server Startup', () => {
     expect(process.env.LOCALSTACK_ENDPOINT).toBe('http://localhost:4566');
     expect(process.env.S3_BUCKET).toBe('mailtri-emails-test');
     expect(process.env.SQS_QUEUE_URL).toContain(
-      'mailtri-processed-emails-test'
+      'mailtri-processed-emails-test',
     );
   });
 

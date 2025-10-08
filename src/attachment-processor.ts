@@ -2,7 +2,7 @@ import { Attachment, ProcessedAttachment } from './types';
 
 export class AttachmentProcessor {
   async processAttachment(
-    attachment: Attachment
+    attachment: Attachment,
   ): Promise<ProcessedAttachment> {
     const result: ProcessedAttachment = {
       ...attachment,
@@ -46,7 +46,7 @@ export class AttachmentProcessor {
 
   async processAttachments(attachments: Attachment[]): Promise<ProcessedAttachment[]> {
     const results: ProcessedAttachment[] = [];
-    
+
     for (const attachment of attachments) {
       try {
         const processed = await this.processAttachment(attachment);
@@ -61,7 +61,7 @@ export class AttachmentProcessor {
         });
       }
     }
-    
+
     return results;
   }
 
@@ -117,21 +117,21 @@ export class AttachmentProcessor {
         }
 
         switch (cleanKey) {
-          case 'SUMMARY':
-            currentEvent.summary = normalizedValue;
-            break;
-          case 'DTSTART':
-            currentEvent.start = normalizedValue;
-            break;
-          case 'DTEND':
-            currentEvent.end = normalizedValue;
-            break;
-          case 'LOCATION':
-            currentEvent.location = normalizedValue;
-            break;
-          case 'DESCRIPTION':
-            currentEvent.description = normalizedValue;
-            break;
+        case 'SUMMARY':
+          currentEvent.summary = normalizedValue;
+          break;
+        case 'DTSTART':
+          currentEvent.start = normalizedValue;
+          break;
+        case 'DTEND':
+          currentEvent.end = normalizedValue;
+          break;
+        case 'LOCATION':
+          currentEvent.location = normalizedValue;
+          break;
+        case 'DESCRIPTION':
+          currentEvent.description = normalizedValue;
+          break;
         }
       }
     }

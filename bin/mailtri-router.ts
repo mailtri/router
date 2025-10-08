@@ -16,7 +16,7 @@ const region =
 // Warn if using default account ID
 if (account === '123456789012') {
   console.warn(
-    '⚠️  Using default account ID. Set CDK_DEFAULT_ACCOUNT or AWS_ACCOUNT_ID for production.'
+    '⚠️  Using default account ID. Set CDK_DEFAULT_ACCOUNT or AWS_ACCOUNT_ID for production.',
   );
 }
 

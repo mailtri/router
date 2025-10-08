@@ -154,13 +154,13 @@ async function ensureResourcesExist(): Promise<void> {
     // Check if SQS queue exists, create if not
     try {
       await sqsClient.send(
-        new GetQueueUrlCommand({ QueueName: config.sqsQueueName })
+        new GetQueueUrlCommand({ QueueName: config.sqsQueueName }),
       );
       logger.debug('SQS queue exists', { queue: config.sqsQueueName });
     } catch (error) {
       logger.info('Creating SQS queue', { queue: config.sqsQueueName });
       await sqsClient.send(
-        new CreateQueueCommand({ QueueName: config.sqsQueueName })
+        new CreateQueueCommand({ QueueName: config.sqsQueueName }),
       );
       logger.info('SQS queue created', { queue: config.sqsQueueName });
     }
@@ -180,12 +180,12 @@ async function getSqsQueueUrl(): Promise<string> {
 
   try {
     const response = await sqsClient.send(
-      new GetQueueUrlCommand({ QueueName: config.sqsQueueName })
+      new GetQueueUrlCommand({ QueueName: config.sqsQueueName }),
     );
     return response.QueueUrl!;
   } catch (error) {
     throw new Error(
-      `Failed to get SQS queue URL for ${config.sqsQueueName}: ${error}`
+      `Failed to get SQS queue URL for ${config.sqsQueueName}: ${error}`,
     );
   }
 }
@@ -265,11 +265,11 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
         parsedText = parsed.body.normalized || parsed.body.text || '';
         parsedHtml = parsed.body.html || '';
         attachments = parsed.attachments || [];
-        
+
         // Extract CC and BCC recipients from parsed email
         ccRecipients = parsed.cc?.map(addr => addr.address) || [];
         bccRecipients = parsed.bcc?.map(addr => addr.address) || [];
-        
+
         logger.debug('Email recipients parsed', {
           to: parsed.to?.map(addr => addr.address) || [],
           cc: ccRecipients,
@@ -280,7 +280,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
         // Keep original content as plain text
       }
     }
-    
+
     // Use provided CC/BCC from JSON input if not already set from email parsing
     logger.debug('CC/BCC processing', {
       ccRecipientsLength: ccRecipients.length,
@@ -288,7 +288,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
       emailDataCc: emailData.cc,
       emailDataBcc: emailData.bcc,
     });
-    
+
     if (ccRecipients.length === 0 && emailData.cc) {
       ccRecipients = emailData.cc.split(',').map(addr => addr.trim());
       logger.debug('Set CC from JSON input', { ccRecipients });
@@ -341,7 +341,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
         Metadata: {
           messageId: emailData.messageId,
         },
-      })
+      }),
     );
 
     // Get SQS queue URL
@@ -367,7 +367,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
             StringValue: emailData.to,
           },
         },
-      })
+      }),
     );
 
     // Send processing webhook if configured
@@ -430,7 +430,7 @@ function createHttpServer() {
     return null; // No HTTP server in production
   }
 
-  const server = createServer(async (req, res) => {
+  const server = createServer(async(req, res) => {
     const { pathname } = parse(req.url || '', true);
 
     // CORS headers
@@ -447,7 +447,7 @@ function createHttpServer() {
     if (pathname === '/webhook' && req.method === 'POST') {
       let body = '';
       req.on('data', chunk => (body += chunk));
-      req.on('end', async () => {
+      req.on('end', async() => {
         try {
           const emailData = JSON.parse(body);
           const result = await processEmailData(emailData);
@@ -468,7 +468,7 @@ function createHttpServer() {
           environment: config.isLocal ? 'local' : 'production',
           s3Bucket: config.s3Bucket,
           sqsQueueName: config.sqsQueueName,
-        })
+        }),
       );
     } else {
       res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -486,7 +486,7 @@ async function startLocalServer() {
   const server = createHttpServer();
   if (!server) {
     throw new Error(
-      'HTTP server can only be created in local development mode'
+      'HTTP server can only be created in local development mode',
     );
   }
 
@@ -510,7 +510,7 @@ async function startLocalServer() {
     console.log(`curl -X POST http://localhost:${config.port}/webhook \\`);
     console.log('  -H "Content-Type: application/json" \\');
     console.log(
-      '  -d \'{"messageId": "test-123", "from": "test@example.com", "to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}\''
+      '  -d \'{"messageId": "test-123", "from": "test@example.com", "to": "task+notion@example.com", "subject": "Create task", "body": "New feature request"}\'',
     );
     console.log('');
     console.log('📚 Service URLs:');
@@ -525,18 +525,18 @@ async function startLocalServer() {
 
   // Graceful shutdown
   process.on('SIGINT', () => {
-  logger.info('Shutting down router...');
-  server.close(() => {
-    logger.info('Server stopped');
-    process.exit(0);
-  });
+    logger.info('Shutting down router...');
+    server.close(() => {
+      logger.info('Server stopped');
+      process.exit(0);
+    });
   });
 }
 
 /**
  * Lambda handler for production
  */
-export const handler = async (event: any): Promise<any> => {
+export const handler = async(event: any): Promise<any> => {
   logger.info('Processing email event', { eventType: 'Records' in event ? 'SES/SNS' : 'Direct', recordCount: 'Records' in event ? event.Records?.length : 1 });
 
   try {

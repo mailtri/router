@@ -32,7 +32,7 @@ const transports: winston.transport[] = [
         const { timestamp, level, message, ...meta } = info;
         const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta, null, 2)}` : '';
         return `${timestamp} ${level}: ${message}${metaStr}`;
-      })
+      }),
     ),
   }),
 ];
@@ -45,16 +45,16 @@ if (process.env.NODE_ENV === 'production' && !process.env.AWS_LAMBDA_FUNCTION_NA
       level: 'error',
       format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.json()
+        winston.format.json(),
       ),
     }),
     new winston.transports.File({
       filename: 'logs/combined.log',
       format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.json()
+        winston.format.json(),
       ),
-    })
+    }),
   );
 }
 

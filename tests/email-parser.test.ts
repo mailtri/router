@@ -601,7 +601,9 @@ ${largeBody}`;
       expect(result.to[0]?.address).toBe('task+notion@domain.com');
       expect(result.subject).toBe('Create task: New feature request');
       expect(result.messageId).toBe('<test-123@example.com>');
-      expect(result.body.normalized).toContain('Please implement user authentication');
+      expect(result.body.normalized).toContain(
+        'Please implement user authentication',
+      );
       expect(result.body.normalized).toContain('Login with email/password');
       expect(result.body.normalized).toContain('Social login (Google, Apple)');
       expect(result.body.normalized).toContain('Password reset functionality');

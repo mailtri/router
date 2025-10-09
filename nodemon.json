@@ -1,7 +1,15 @@
 {
   "watch": ["src"],
   "ext": "ts,js,json",
-  "ignore": ["node_modules", "dist", "coverage", "tests", "dev/localstack-data", "dev/postgres-data", "dev/redis-data"],
+  "ignore": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "tests",
+    "dev/localstack-data",
+    "dev/postgres-data",
+    "dev/redis-data"
+  ],
   "exec": "ts-node src/router.ts",
   "env": {
     "NODE_ENV": "development"

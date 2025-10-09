@@ -1,11 +1,5 @@
 #!/usr/bin/env ts-node
 
-/**
- * Email Router for mailtri-router
- * Works for both local development and production environments
- * Uses environment variables to determine configuration
- */
-
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -28,108 +22,14 @@ import {
 } from '@aws-sdk/client-sqs';
 import { EmailParser } from './email-parser';
 import { AttachmentProcessor } from './attachment-processor';
-import { Attachment } from './types';
+import { EmailData, ProcessResult, ProcessedEmail, Attachment } from './types';
 import logger from './logger';
+import { parseConfig } from './config';
+import { sendReceiptWebhook } from './webhook';
 
-// Winston logger is working correctly
-
-// Type definitions
-interface EmailData {
-  messageId: string;
-  from: string;
-  to: string;
-  cc?: string;
-  bcc?: string;
-  subject: string;
-  body?: string;
-  html?: string;
-}
-
-interface ProcessResult {
-  success: boolean;
-  error?: string;
-}
-
-interface ProcessedEmail {
-  messageId: string;
-  timestamp: string;
-  email: {
-    from: string;
-    to: string;
-    cc?: string;
-    bcc?: string;
-    subject: string;
-    body: string;
-    html?: string;
-    attachments: unknown[];
-  };
-}
-
-// Environment-based configuration
-const config = {
-  // Server configuration
-  port: process.env.PORT || 3030,
-  isLocal:
-    process.env.NODE_ENV === 'development' || process.env.IS_LOCAL === 'true',
-
-  // AWS configuration
-  awsEndpoint:
-    process.env.AWS_ENDPOINT_URL ||
-    (process.env.IS_LOCAL === 'true' ? 'http://localhost:4566' : undefined),
-  awsRegion: process.env.AWS_REGION || 'us-east-1',
-  awsAccessKeyId:
-    process.env.AWS_ACCESS_KEY_ID ||
-    (process.env.IS_LOCAL === 'true' ? 'test' : undefined),
-  awsSecretAccessKey:
-    process.env.AWS_SECRET_ACCESS_KEY ||
-    (process.env.IS_LOCAL === 'true' ? 'test' : undefined),
-
-  // Resource configuration
-  s3Bucket: process.env.S3_BUCKET || 'mailtri-emails',
-  sqsQueueName: process.env.SQS_QUEUE_NAME || 'mailtri-processed-emails',
-  sqsQueueUrl: process.env.SQS_QUEUE_URL,
-
-  // Optional webhook
-  webhookUrl: process.env.WEBHOOK_URL,
-};
-
-// Initialize AWS clients
-const s3ClientConfig: any = {
-  region: config.awsRegion,
-};
-
-if (config.awsEndpoint) {
-  s3ClientConfig.endpoint = config.awsEndpoint;
-}
-
-if (config.awsAccessKeyId && config.awsSecretAccessKey) {
-  s3ClientConfig.credentials = {
-    accessKeyId: config.awsAccessKeyId,
-    secretAccessKey: config.awsSecretAccessKey,
-  };
-}
-
-if (config.isLocal) {
-  s3ClientConfig.forcePathStyle = true;
-}
+const { config, s3ClientConfig, sqsClientConfig } = parseConfig();
 
 const s3Client = new S3Client(s3ClientConfig);
-
-const sqsClientConfig: any = {
-  region: config.awsRegion,
-};
-
-if (config.awsEndpoint) {
-  sqsClientConfig.endpoint = config.awsEndpoint;
-}
-
-if (config.awsAccessKeyId && config.awsSecretAccessKey) {
-  sqsClientConfig.credentials = {
-    accessKeyId: config.awsAccessKeyId,
-    secretAccessKey: config.awsSecretAccessKey,
-  };
-}
-
 const sqsClient = new SQSClient(sqsClientConfig);
 
 /**
@@ -165,7 +65,9 @@ async function ensureResourcesExist(): Promise<void> {
       logger.info('SQS queue created', { queue: config.sqsQueueName });
     }
   } catch (error) {
-    logger.error('Error ensuring resources exist', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Error ensuring resources exist', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     throw error;
   }
 }
@@ -191,51 +93,6 @@ async function getSqsQueueUrl(): Promise<string> {
 }
 
 /**
- * Send receipt webhook (immediate notification when email is received)
- */
-async function sendReceiptWebhook(emailData: EmailData): Promise<void> {
-  if (!config.webhookUrl) {
-    return; // No webhook configured
-  }
-
-  try {
-    const receiptPayload = {
-      type: 'email_received',
-      messageId: emailData.messageId,
-      timestamp: new Date().toISOString(),
-      source: config.isLocal ? 'local' : 'production',
-      email: {
-        from: emailData.from,
-        to: emailData.to,
-        cc: emailData.cc,
-        bcc: emailData.bcc,
-        subject: emailData.subject,
-        hasBody: !!emailData.body,
-        hasHtml: !!emailData.html,
-      },
-    };
-
-    const response = await fetch(config.webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'mailtri-router/1.0',
-      },
-      body: JSON.stringify(receiptPayload),
-    });
-
-    if (response.ok) {
-      logger.info('Receipt webhook sent successfully');
-    } else {
-      logger.warn('Receipt webhook failed', { status: response.status, statusText: response.statusText });
-    }
-  } catch (error) {
-    logger.error('Receipt webhook error', { error: error instanceof Error ? error.message : 'Unknown error' });
-    // Don't throw - receipt webhook failure shouldn't stop processing
-  }
-}
-
-/**
  * Process incoming email
  */
 async function processEmail(emailData: EmailData): Promise<ProcessResult> {
@@ -243,7 +100,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
     logger.info('Processing email', { emailData });
 
     // Send receipt webhook immediately (before any processing)
-    await sendReceiptWebhook(emailData);
+    await sendReceiptWebhook(config, emailData);
 
     // Handle both email format and simple JSON input
     const emailContent = emailData.body || '';
@@ -276,7 +133,9 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
           bcc: bccRecipients,
         });
       } catch (error) {
-        logger.warn('Could not parse as email, treating as plain text', { error: error instanceof Error ? error.message : 'Unknown error' });
+        logger.warn('Could not parse as email, treating as plain text', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
         // Keep original content as plain text
       }
     }
@@ -304,10 +163,16 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
       logger.info('Processing attachments', { count: attachments.length });
       try {
         const attachmentProcessor = new AttachmentProcessor();
-        processedAttachments = await attachmentProcessor.processAttachments(attachments as Attachment[]);
-        logger.info('Attachments processed successfully', { count: processedAttachments.length });
+        processedAttachments = await attachmentProcessor.processAttachments(
+          attachments as Attachment[],
+        );
+        logger.info('Attachments processed successfully', {
+          count: processedAttachments.length,
+        });
       } catch (error) {
-        logger.error('Failed to process attachments', { error: error instanceof Error ? error.message : 'Unknown error' });
+        logger.error('Failed to process attachments', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
         // Continue without attachments
       }
     }
@@ -403,18 +268,29 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
         if (response.ok) {
           logger.info('Processing webhook sent successfully');
         } else {
-          logger.warn('Processing webhook failed', { status: response.status, statusText: response.statusText });
+          logger.warn('Processing webhook failed', {
+            status: response.status,
+            statusText: response.statusText,
+          });
         }
       } catch (error) {
-        logger.error('Processing webhook error', { error: error instanceof Error ? error.message : 'Unknown error' });
+        logger.error('Processing webhook error', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
     }
 
-    logger.info('Email processed successfully', { messageId: emailData.messageId, s3Key });
+    logger.info('Email processed successfully', {
+      messageId: emailData.messageId,
+      s3Key,
+    });
     logger.debug('Processed email data', { processedEmail });
     return { success: true };
   } catch (error) {
-    logger.error('Error processing email', { error: error instanceof Error ? error.message : 'Unknown error', messageId: emailData.messageId });
+    logger.error('Error processing email', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      messageId: emailData.messageId,
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -494,7 +370,9 @@ async function startLocalServer() {
   try {
     await ensureResourcesExist();
   } catch (error) {
-    logger.error('Failed to ensure AWS resources exist', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Failed to ensure AWS resources exist', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     logger.info('Make sure LocalStack is running: docker-compose up -d');
     process.exit(1);
   }
@@ -537,7 +415,10 @@ async function startLocalServer() {
  * Lambda handler for production
  */
 export const handler = async(event: any): Promise<any> => {
-  logger.info('Processing email event', { eventType: 'Records' in event ? 'SES/SNS' : 'Direct', recordCount: 'Records' in event ? event.Records?.length : 1 });
+  logger.info('Processing email event', {
+    eventType: 'Records' in event ? 'SES/SNS' : 'Direct',
+    recordCount: 'Records' in event ? event.Records?.length : 1,
+  });
 
   try {
     // Handle different event types
@@ -553,7 +434,9 @@ export const handler = async(event: any): Promise<any> => {
       throw new Error('Unknown event format');
     }
   } catch (error) {
-    logger.error('Error processing email event', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Error processing email event', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     throw error;
   }
 };
@@ -609,7 +492,9 @@ async function processEmailRecord(record: EmailRecord): Promise<void> {
 
     await processEmailData(emailData);
   } catch (error) {
-    logger.error('Error processing email record', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Error processing email record', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     throw error;
   }
 }
@@ -621,7 +506,9 @@ async function processDirectEmail(emailData: EmailData): Promise<void> {
   try {
     await processEmailData(emailData);
   } catch (error) {
-    logger.error('Error processing direct email', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Error processing direct email', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     throw error;
   }
 }
@@ -631,7 +518,12 @@ async function processDirectEmail(emailData: EmailData): Promise<void> {
  */
 async function processEmailData(emailData: any): Promise<void> {
   try {
-    logger.debug('Processing email data', { messageId: emailData.messageId, from: emailData.from, to: emailData.to, subject: emailData.subject });
+    logger.debug('Processing email data', {
+      messageId: emailData.messageId,
+      from: emailData.from,
+      to: emailData.to,
+      subject: emailData.subject,
+    });
 
     // Extract email content based on data type
     let emailContent: string;
@@ -678,15 +570,19 @@ async function processEmailData(emailData: any): Promise<void> {
       throw new Error(result.error || 'Failed to process email');
     }
   } catch (error) {
-    logger.error('Error processing email data', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Error processing email data', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     throw error;
   }
 }
 
 // Start local server if running directly
 if (require.main === module) {
-  startLocalServer().catch((error) => {
-    logger.error('Failed to start local server', { error: error instanceof Error ? error.message : 'Unknown error' });
+  startLocalServer().catch(error => {
+    logger.error('Failed to start local server', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     process.exit(1);
   });
 }

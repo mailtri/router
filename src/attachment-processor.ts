@@ -44,7 +44,9 @@ export class AttachmentProcessor {
     return result;
   }
 
-  async processAttachments(attachments: Attachment[]): Promise<ProcessedAttachment[]> {
+  async processAttachments(
+    attachments: Attachment[],
+  ): Promise<ProcessedAttachment[]> {
     const results: ProcessedAttachment[] = [];
 
     for (const attachment of attachments) {

@@ -4,7 +4,10 @@ import { Config, EmailData } from './types';
 /**
  * Send receipt webhook (immediate notification when email is received)
  */
-export async function sendReceiptWebhook(config: Config, emailData: EmailData): Promise<void> {
+export async function sendReceiptWebhook(
+  config: Config,
+  emailData: EmailData,
+): Promise<void> {
   if (!config.webhookUrl) {
     return; // No webhook configured
   }

@@ -21,8 +21,19 @@ import {
   GetQueueUrlCommand,
 } from '@aws-sdk/client-sqs';
 import { EmailParser } from './email-parser';
+import { ParsingErrorHandler } from './parsing-error-handler';
 import { AttachmentProcessor } from './attachment-processor';
-import { EmailData, ProcessResult, ProcessedEmail, Attachment } from './types';
+import {
+  EmailData,
+  ProcessResult,
+  ProcessedEmail,
+  Attachment,
+  ProcessedAttachment,
+  LambdaEvent,
+  LambdaResponse,
+  EmailRecord,
+  SESEmailData,
+} from './types';
 import logger from './logger';
 import { parseConfig } from './config';
 import { sendReceiptWebhook } from './webhook';
@@ -133,10 +144,28 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
           bcc: bccRecipients,
         });
       } catch (error) {
-        logger.warn('Could not parse as email, treating as plain text', {
-          error: error instanceof Error ? error.message : 'Unknown error',
+        // Use ParsingErrorHandler for graceful degradation
+        const errorHandler = new ParsingErrorHandler();
+        const parsed = await errorHandler.handleParsingError(
+          error as Error,
+          Buffer.from(emailContent),
+        );
+
+        parsedText = parsed.body.normalized || '';
+        parsedHtml = '';
+        attachments = parsed.attachments || [];
+
+        // Extract CC and BCC recipients from fallback parsing
+        ccRecipients = parsed.cc?.map(addr => addr.address) || [];
+        bccRecipients = parsed.bcc?.map(addr => addr.address) || [];
+
+        logger.info('Email parsing recovered with fallback handler', {
+          messageId: parsed.messageId,
+          from: parsed.from?.address,
+          to: parsed.to?.map(addr => addr.address) || [],
+          cc: ccRecipients,
+          bcc: bccRecipients,
         });
-        // Keep original content as plain text
       }
     }
 
@@ -158,7 +187,7 @@ async function processEmail(emailData: EmailData): Promise<ProcessResult> {
     }
 
     // Process attachments if any
-    let processedAttachments: any[] = [];
+    let processedAttachments: ProcessedAttachment[] = [];
     if (attachments.length > 0) {
       logger.info('Processing attachments', { count: attachments.length });
       try {
@@ -414,7 +443,7 @@ async function startLocalServer() {
 /**
  * Lambda handler for production
  */
-export const handler = async(event: any): Promise<any> => {
+export const handler = async(event: LambdaEvent): Promise<LambdaResponse> => {
   logger.info('Processing email event', {
     eventType: 'Records' in event ? 'SES/SNS' : 'Direct',
     recordCount: 'Records' in event ? event.Records?.length : 1,
@@ -429,56 +458,34 @@ export const handler = async(event: any): Promise<any> => {
       }
     } else if ('messageId' in event) {
       // Direct email object
-      await processDirectEmail(event);
+      await processDirectEmail(event as unknown as EmailData);
     } else {
       throw new Error('Unknown event format');
     }
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Email processed successfully' }),
+    };
   } catch (error) {
     logger.error('Error processing email event', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    throw error;
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
+    };
   }
 };
 
 /**
  * Process a single email record (SES/SNS)
  */
-interface EmailRecord {
-  Sns?: {
-    Message: string;
-  };
-  ses?: {
-    mail: {
-      messageId: string;
-      source: string;
-      destination: string[];
-      commonHeaders: {
-        from: string[];
-        to: string[];
-        subject: string;
-      };
-    };
-  };
-}
-
-// interface EmailData {
-//   content?: string;
-//   mail: {
-//     messageId: string;
-//     source: string;
-//     destination: string[];
-//     commonHeaders: {
-//       from: string[];
-//       to: string[];
-//       subject: string;
-//     };
-//   };
-// }
-
 async function processEmailRecord(record: EmailRecord): Promise<void> {
   try {
-    let emailData: any;
+    let emailData: SESEmailData | Record<string, unknown>;
 
     // Handle SNS notification
     if (record.Sns && record.Sns.Message) {
@@ -516,13 +523,16 @@ async function processDirectEmail(emailData: EmailData): Promise<void> {
 /**
  * Process email data (unified for both SES and direct)
  */
-async function processEmailData(emailData: any): Promise<void> {
+async function processEmailData(
+  emailData: SESEmailData | EmailData | Record<string, unknown>,
+): Promise<void> {
   try {
+    const emailDataAny = emailData as Record<string, unknown>;
     logger.debug('Processing email data', {
-      messageId: emailData.messageId,
-      from: emailData.from,
-      to: emailData.to,
-      subject: emailData.subject,
+      messageId: emailDataAny.messageId,
+      from: emailDataAny.from,
+      to: emailDataAny.to,
+      subject: emailDataAny.subject,
     });
 
     // Extract email content based on data type
@@ -536,22 +546,24 @@ async function processEmailData(emailData: any): Promise<void> {
     let bcc: string | undefined;
 
     if ('mail' in emailData) {
-      // EmailData type (SES)
-      emailContent = emailData.content || '';
-      messageId = emailData.mail.messageId || `msg-${Date.now()}`;
-      from = emailData.mail.source || 'unknown@example.com';
-      to = emailData.mail.destination?.[0] || 'unknown@example.com';
-      subject = emailData.mail.commonHeaders?.subject || '';
+      // SESEmailData type
+      const sesData = emailData as SESEmailData;
+      emailContent = sesData.content || '';
+      messageId = sesData.mail.messageId || `msg-${Date.now()}`;
+      from = sesData.mail.source || 'unknown@example.com';
+      to = sesData.mail.destination?.[0] || 'unknown@example.com';
+      subject = sesData.mail.commonHeaders?.subject || '';
     } else {
-      // DirectEmailEvent type
-      emailContent = emailData.body || '';
-      messageId = emailData.messageId || `msg-${Date.now()}`;
-      from = emailData.from || 'unknown@example.com';
-      to = emailData.to || 'unknown@example.com';
-      subject = emailData.subject || '';
-      html = emailData.html;
-      cc = emailData.cc;
-      bcc = emailData.bcc;
+      // EmailData type (direct)
+      const directData = emailData as EmailData;
+      emailContent = directData.body || '';
+      messageId = directData.messageId || `msg-${Date.now()}`;
+      from = directData.from || 'unknown@example.com';
+      to = directData.to || 'unknown@example.com';
+      subject = directData.subject || '';
+      html = directData.html;
+      cc = directData.cc;
+      bcc = directData.bcc;
     }
 
     // Process the email using the router

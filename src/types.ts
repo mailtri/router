@@ -31,16 +31,67 @@ export interface ParsedEmail {
   size: number;
 }
 
+// Metadata types for different attachment types
+export interface ImageMetadata {
+  type: 'image';
+  width: number;
+  height: number;
+  format: string;
+  size: number;
+}
+
+export interface CalendarEventMetadata {
+  summary?: string;
+  start?: string;
+  end?: string;
+  location?: string;
+  description?: string;
+}
+
+export interface CalendarMetadata {
+  type: 'calendar';
+  events: CalendarEventMetadata[];
+}
+
+export interface DocumentMetadata {
+  type: 'document' | 'pdf' | 'docx';
+  pages: number;
+  author: string;
+  title: string;
+  size: number;
+}
+
+export interface ArchiveMetadata {
+  type: 'archive';
+  fileCount: number;
+  compressedSize: number;
+  uncompressedSize: number;
+  format: string;
+}
+
+export type AttachmentMetadata =
+  | ImageMetadata
+  | CalendarMetadata
+  | DocumentMetadata
+  | ArchiveMetadata
+  | Record<string, unknown>;
+
 export interface ProcessedAttachment extends Attachment {
   processed: boolean;
-  metadata?: any;
+  metadata?: AttachmentMetadata;
   error?: string;
 }
 
-export interface ValidationResult {
+export interface ValidationError {
+  field: string;
+  message: string;
+  code?: string;
+}
+
+export interface ValidationResult<T = unknown> {
   isValid: boolean;
-  errors: any[];
-  data: any;
+  errors: ValidationError[];
+  data: T;
 }
 
 export interface EmailData {
@@ -111,4 +162,67 @@ export interface SQSClientConfig {
     accessKeyId: string;
     secretAccessKey: string;
   };
+}
+
+// Mailparser types
+export interface MailparserAddress {
+  address: string;
+  name?: string;
+  original?: string;
+  text?: string;
+}
+
+export interface MailparserAddressObject {
+  value?: MailparserAddress[];
+  text?: string;
+}
+
+// AWS Lambda event types
+export interface LambdaEvent {
+  Records?: EmailRecord[];
+  messageId?: string;
+}
+
+export interface LambdaResponse {
+  statusCode: number;
+  body: string;
+}
+
+export interface EmailRecord {
+  Sns?: {
+    Message: string;
+  };
+  ses?: {
+    mail: {
+      messageId: string;
+      source: string;
+      destination: string[];
+      commonHeaders: {
+        from: string[];
+        to: string[];
+        subject: string;
+      };
+    };
+  };
+}
+
+export interface SESEmailData {
+  content?: string;
+  mail: {
+    messageId: string;
+    source: string;
+    destination: string[];
+    commonHeaders: {
+      from: string[];
+      to: string[];
+      subject: string;
+    };
+  };
+}
+
+// Email intent parsing types
+export interface EmailIntent {
+  action: string;
+  target: string;
+  parameters: Record<string, unknown>;
 }

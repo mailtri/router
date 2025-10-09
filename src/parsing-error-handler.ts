@@ -1,12 +1,18 @@
 import { ParsedEmail } from './types';
 
 export class ParsingErrorHandler {
-  async handleParsingError(error: Error, emailData: any): Promise<ParsedEmail> {
+  async handleParsingError(
+    error: Error,
+    emailData: Buffer | string,
+  ): Promise<ParsedEmail> {
     // Log the error with context
+    const dataLength = Buffer.isBuffer(emailData)
+      ? emailData.length
+      : emailData.length;
     console.error('Email parsing error:', {
       error: error.message,
       stack: error.stack,
-      emailSize: emailData.length,
+      emailSize: dataLength,
       emailHeaders: this.extractHeaders(emailData),
     });
 
@@ -19,9 +25,14 @@ export class ParsingErrorHandler {
     }
   }
 
-  private async extractBasicInfo(emailData: any): Promise<ParsedEmail> {
+  private async extractBasicInfo(
+    emailData: Buffer | string,
+  ): Promise<ParsedEmail> {
     // Extract basic headers using regex
     const headers = this.extractHeaders(emailData);
+    const dataLength = Buffer.isBuffer(emailData)
+      ? emailData.length
+      : emailData.length;
 
     return {
       messageId: headers['message-id'] || 'unknown',
@@ -32,11 +43,14 @@ export class ParsingErrorHandler {
       attachments: [],
       headers,
       date: new Date(headers.date || Date.now()),
-      size: emailData.length,
+      size: dataLength,
     };
   }
 
-  private createMinimalEmail(emailData: any): ParsedEmail {
+  private createMinimalEmail(emailData: Buffer | string): ParsedEmail {
+    const dataLength = Buffer.isBuffer(emailData)
+      ? emailData.length
+      : emailData.length;
     return {
       messageId: `minimal-${Date.now()}`,
       from: { address: '', name: '', original: '' },
@@ -46,11 +60,11 @@ export class ParsingErrorHandler {
       attachments: [],
       headers: {},
       date: new Date(),
-      size: emailData.length,
+      size: dataLength,
     };
   }
 
-  private extractHeaders(emailData: any): Record<string, string> {
+  private extractHeaders(emailData: Buffer | string): Record<string, string> {
     const headers: Record<string, string> = {};
 
     try {

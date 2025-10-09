@@ -1,17 +1,17 @@
-import { simpleParser } from 'mailparser';
-import { Attachment, ParsedEmail, EmailAddress } from './types';
-
-export interface ProcessedAttachment extends Attachment {
-  processed: boolean;
-  metadata?: any;
-  error?: string;
-}
+import { simpleParser, ParsedMail, AddressObject } from 'mailparser';
+import {
+  Attachment,
+  ParsedEmail,
+  EmailAddress,
+  MailparserAddress,
+  MailparserAddressObject,
+} from './types';
 
 export class EmailParsingError extends Error {
   constructor(
     message: string,
     public override cause?: Error,
-    public context?: any,
+    public context?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'EmailParsingError';
@@ -28,8 +28,10 @@ export class EmailParser {
       const parsed = await simpleParser(rawEmail);
 
       // Validate that we have at least some basic email structure
-      const hasFrom = (parsed.from as any)?.value?.[0]?.address;
-      const hasTo = (parsed.to as any)?.value?.[0]?.address;
+      const fromAddress = this.extractAddressValue(parsed.from);
+      const toAddress = this.extractAddressValue(parsed.to);
+      const hasFrom = fromAddress?.[0]?.address;
+      const hasTo = toAddress?.[0]?.address;
       const hasSubject = parsed.subject;
       const hasBody = parsed.text || parsed.html;
 
@@ -42,12 +44,14 @@ export class EmailParser {
 
       return {
         messageId: this.extractMessageId(parsed),
-        from: this.normalizeEmailAddress(
-          (parsed.from as any)?.value?.[0] || {},
+        from: this.normalizeEmailAddress(fromAddress?.[0] || {}),
+        to: this.normalizeEmailAddresses(toAddress || []),
+        cc: this.normalizeEmailAddresses(
+          this.extractAddressValue(parsed.cc) || [],
         ),
-        to: this.normalizeEmailAddresses((parsed.to as any)?.value || []),
-        cc: this.normalizeEmailAddresses((parsed.cc as any)?.value || []),
-        bcc: this.normalizeEmailAddresses((parsed.bcc as any)?.value || []),
+        bcc: this.normalizeEmailAddresses(
+          this.extractAddressValue(parsed.bcc) || [],
+        ),
         subject: this.normalizeSubject(parsed.subject || ''),
         body: this.normalizeBody(parsed),
         attachments: this.processAttachments(parsed.attachments || []),
@@ -60,17 +64,38 @@ export class EmailParser {
     }
   }
 
-  private extractMessageId(parsed: any): string {
+  private extractAddressValue(
+    addressObj: AddressObject | AddressObject[] | undefined,
+  ): MailparserAddress[] | undefined {
+    if (!addressObj) return undefined;
+
+    // Handle array of AddressObject
+    if (Array.isArray(addressObj)) {
+      const result: MailparserAddress[] = [];
+      for (const obj of addressObj) {
+        const value = (obj as MailparserAddressObject).value;
+        if (value) result.push(...value);
+      }
+      return result.length > 0 ? result : undefined;
+    }
+
+    // Handle single AddressObject
+    return (addressObj as MailparserAddressObject).value;
+  }
+
+  private extractMessageId(parsed: ParsedMail): string {
     // Try to extract from headers first
     if (parsed.headers && parsed.headers.get('message-id')) {
-      return parsed.headers.get('message-id');
+      return parsed.headers.get('message-id') as string;
     }
 
     // Fallback to generated ID
     return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
-  private normalizeEmailAddress(address: any): EmailAddress {
+  private normalizeEmailAddress(
+    address: Partial<MailparserAddress>,
+  ): EmailAddress {
     if (!address || !address.address)
       return { address: '', name: '', original: '' };
 
@@ -89,7 +114,9 @@ export class EmailParser {
     };
   }
 
-  private normalizeEmailAddresses(addresses: any[]): EmailAddress[] {
+  private normalizeEmailAddresses(
+    addresses: MailparserAddress[],
+  ): EmailAddress[] {
     if (!addresses) return [];
 
     return addresses.map(addr => this.normalizeEmailAddress(addr));
@@ -105,7 +132,7 @@ export class EmailParser {
       .normalize('NFC');
   }
 
-  private normalizeBody(parsed: any): {
+  private normalizeBody(parsed: ParsedMail): {
     text?: string;
     html?: string;
     normalized: string;
@@ -126,34 +153,48 @@ export class EmailParser {
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
-    return {
-      text: text || undefined,
-      html: html || undefined,
+    const result: { text?: string; html?: string; normalized: string } = {
       normalized,
     };
+    if (text) result.text = text;
+    if (html) result.html = html;
+    return result;
   }
 
-  private processAttachments(attachments: any[]): Attachment[] {
+  private processAttachments(
+    attachments: ParsedMail['attachments'],
+  ): Attachment[] {
     if (!attachments) return [];
 
-    return attachments.map(attachment => ({
-      filename: attachment.filename || 'unknown',
-      contentType: attachment.contentType || 'application/octet-stream',
-      size: attachment.size || 0,
-      content: attachment.content,
-      cid: attachment.cid,
-      isInline: attachment.contentDisposition === 'inline',
-    }));
+    return attachments.map(attachment => {
+      const result: Attachment = {
+        filename: attachment.filename || 'unknown',
+        contentType: attachment.contentType || 'application/octet-stream',
+        size: attachment.size || 0,
+        content: attachment.content,
+        isInline: attachment.contentDisposition === 'inline',
+      };
+      if (attachment.cid) result.cid = attachment.cid;
+      return result;
+    });
   }
 
-  private normalizeHeaders(headers: any): Record<string, string> {
+  private normalizeHeaders(
+    headers: ParsedMail['headers'],
+  ): Record<string, string> {
     const normalized: Record<string, string> = {};
 
     if (headers) {
       for (const [key, value] of headers) {
-        normalized[key.toLowerCase()] = Array.isArray(value)
-          ? value.join(', ')
-          : value;
+        if (typeof value === 'string') {
+          normalized[key.toLowerCase()] = value;
+        } else if (Array.isArray(value)) {
+          normalized[key.toLowerCase()] = value.join(', ');
+        } else if (value instanceof Date) {
+          normalized[key.toLowerCase()] = value.toISOString();
+        } else {
+          normalized[key.toLowerCase()] = String(value);
+        }
       }
     }
 

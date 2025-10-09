@@ -44,7 +44,7 @@ nvm install 20
 nvm use 20
 ```
 
-📖 **See [Node.js Setup Guide](docs/NODE-SETUP.md) for detailed instructions.**
+ 
 
 **Quick version check:**
 
@@ -54,7 +54,7 @@ npm run check:node
 
 ### ☁️ AWS Setup
 
-1. **Configure AWS credentials** (see [AWS Setup Guide](docs/AWS-SETUP.md)):
+1. **Configure AWS credentials**:
 
    ```bash
    aws configure
@@ -96,7 +96,7 @@ npx cdk deploy --context domainName=yourdomain.com
 aws ses verify-domain-identity --domain yourdomain.com
 ```
 
-📖 **See [Deployment Guide](docs/DEPLOYMENT.md) for detailed instructions.**
+ 
 
 ## 🌐 Route 53 DNS Records
 
@@ -136,7 +136,7 @@ Type: TXT
 Value: [Updated after DKIM setup]
 ```
 
-📖 **See [Route 53 Setup Guide](docs/ROUTE53-SETUP.md) and [Email Verification Guide](docs/EMAIL-VERIFICATION.md) for detailed instructions.**
+📖 **See [Email Verification Guide](docs/EMAIL-VERIFICATION.md) for detailed instructions.**
 
 ## 🏠 Local Development
 
@@ -475,7 +475,7 @@ The project includes a complete AWS CDK stack (`lib/mailtri-router-stack.ts`) th
 - **Route 53 Records**: SPF, DMARC, DKIM, and SES domain verification
 - **IAM Roles**: Least-privilege access for all services
 
-📖 **See [CDK Infrastructure Guide](docs/CDK-INFRASTRUCTURE.md) for detailed architecture documentation.**
+ 
 
 ### 🏠 Local Development Stack
 
@@ -591,23 +591,9 @@ npm run check:node     # Check Node.js version
 
 ## 📚 Documentation
 
-### 🚀 Getting Started
-
-- 📖 [AWS Setup Guide](docs/AWS-SETUP.md) - Configure AWS credentials and permissions
-- 🚀 [Deployment Guide](docs/DEPLOYMENT.md) - Deploy infrastructure to AWS
-- 📦 [Node.js Setup](docs/NODE-SETUP.md) - Install and manage Node.js versions
-
 ### 🌐 Domain & Email Setup
 
-- 🌐 [Route 53 Setup](docs/ROUTE53-SETUP.md) - Configure DNS for email routing
-- 🌐 [Route 53 Integration](docs/ROUTE53-INTEGRATION.md) - CDK Route 53 integration details
 - ✉️ [Email Verification](docs/EMAIL-VERIFICATION.md) - Verify domains and set up DKIM
-
-### 🏗️ Architecture & Development
-
-- 🏗️ [CDK Infrastructure](docs/CDK-INFRASTRUCTURE.md) - Detailed infrastructure documentation
-- 🧪 [Testing Guide](docs/TESTING.md) - Running tests and test coverage
-- 🔧 [Development Guide](docs/DEVELOPMENT.md) - Local development setup
 
 ### 📦 Scripts & Utilities
 

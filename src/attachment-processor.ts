@@ -1,4 +1,12 @@
-import { Attachment, ProcessedAttachment } from './types';
+import {
+  Attachment,
+  ProcessedAttachment,
+  CalendarMetadata,
+  CalendarEventMetadata,
+  ImageMetadata,
+  DocumentMetadata,
+  ArchiveMetadata,
+} from './types';
 
 export class AttachmentProcessor {
   async processAttachment(
@@ -44,7 +52,9 @@ export class AttachmentProcessor {
     return result;
   }
 
-  async processAttachments(attachments: Attachment[]): Promise<ProcessedAttachment[]> {
+  async processAttachments(
+    attachments: Attachment[],
+  ): Promise<ProcessedAttachment[]> {
     const results: ProcessedAttachment[] = [];
 
     for (const attachment of attachments) {
@@ -65,7 +75,9 @@ export class AttachmentProcessor {
     return results;
   }
 
-  private async processICSFile(attachment: Attachment): Promise<any> {
+  private async processICSFile(
+    attachment: Attachment,
+  ): Promise<CalendarMetadata> {
     const content = attachment.content.toString('utf8');
 
     // Simple ICS parser - in production, use a proper library like ical.js
@@ -78,20 +90,22 @@ export class AttachmentProcessor {
 
     return {
       type: 'calendar',
-      events: events.map(event => ({
-        summary: event.summary,
-        start: event.start,
-        end: event.end,
-        location: event.location,
-        description: event.description,
-      })),
+      events: events.map(event => {
+        const mappedEvent: CalendarEventMetadata = {};
+        if (event.summary) mappedEvent.summary = event.summary;
+        if (event.start) mappedEvent.start = event.start;
+        if (event.end) mappedEvent.end = event.end;
+        if (event.location) mappedEvent.location = event.location;
+        if (event.description) mappedEvent.description = event.description;
+        return mappedEvent;
+      }),
     };
   }
 
-  private parseICSContent(content: string): any[] {
-    const events: any[] = [];
+  private parseICSContent(content: string): CalendarEventMetadata[] {
+    const events: CalendarEventMetadata[] = [];
     const lines = content.split('\n');
-    let currentEvent: any = {};
+    let currentEvent: CalendarEventMetadata = {};
     let inEvent = false;
 
     for (const line of lines) {
@@ -139,7 +153,7 @@ export class AttachmentProcessor {
     return events;
   }
 
-  private async processImage(attachment: Attachment): Promise<any> {
+  private async processImage(attachment: Attachment): Promise<ImageMetadata> {
     // Extract basic image metadata
     const metadata = await this.extractImageMetadata(attachment.content);
 
@@ -152,11 +166,13 @@ export class AttachmentProcessor {
     };
   }
 
-  private async extractImageMetadata(content: Buffer): Promise<any> {
+  private async extractImageMetadata(
+    content: Buffer,
+  ): Promise<{ width: number; height: number; format: string }> {
     // Simple image metadata extraction
     // In production, use a library like sharp or image-size
 
-    const metadata: any = {
+    const metadata: { width: number; height: number; format: string } = {
       width: 0,
       height: 0,
       format: 'unknown',
@@ -199,7 +215,9 @@ export class AttachmentProcessor {
     return metadata;
   }
 
-  private async processDocument(attachment: Attachment): Promise<any> {
+  private async processDocument(
+    attachment: Attachment,
+  ): Promise<DocumentMetadata> {
     // Extract document metadata
     const metadata = await this.extractDocumentMetadata(attachment);
 
@@ -212,11 +230,24 @@ export class AttachmentProcessor {
     };
   }
 
-  private async extractDocumentMetadata(attachment: Attachment): Promise<any> {
+  private async extractDocumentMetadata(attachment: Attachment): Promise<{
+    type: 'document' | 'pdf' | 'docx';
+    pages: number;
+    author: string;
+    title: string;
+    size: number;
+  }> {
     // Simple document metadata extraction
     // In production, use libraries like pdf-parse, mammoth, etc.
 
-    const metadata: any = {
+    const metadata: {
+      type: 'document' | 'pdf' | 'docx';
+      pages: number;
+      author: string;
+      title: string;
+      size: number;
+    } = {
+      type: 'document',
       pages: 0,
       author: '',
       title: '',
@@ -245,7 +276,9 @@ export class AttachmentProcessor {
     return metadata;
   }
 
-  private async processArchive(attachment: Attachment): Promise<any> {
+  private async processArchive(
+    attachment: Attachment,
+  ): Promise<ArchiveMetadata> {
     // Extract archive metadata
     const metadata = await this.extractArchiveMetadata(attachment);
 
@@ -258,11 +291,17 @@ export class AttachmentProcessor {
     };
   }
 
-  private async extractArchiveMetadata(attachment: Attachment): Promise<any> {
+  private async extractArchiveMetadata(
+    attachment: Attachment,
+  ): Promise<{ fileCount: number; uncompressedSize: number; format: string }> {
     // Simple archive metadata extraction
     // In production, use libraries like yauzl, tar-stream, etc.
 
-    const metadata: any = {
+    const metadata: {
+      fileCount: number;
+      uncompressedSize: number;
+      format: string;
+    } = {
       fileCount: 0,
       uncompressedSize: 0,
       format: 'unknown',

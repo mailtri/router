@@ -28,9 +28,12 @@ const transports: winston.transport[] = [
     format: winston.format.combine(
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
       winston.format.colorize({ all: true }),
-      winston.format.printf((info) => {
+      winston.format.printf(info => {
         const { timestamp, level, message, ...meta } = info;
-        const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta, null, 2)}` : '';
+        const metaStr =
+          Object.keys(meta).length > 0
+            ? ` ${JSON.stringify(meta, null, 2)}`
+            : '';
         return `${timestamp} ${level}: ${message}${metaStr}`;
       }),
     ),
@@ -38,7 +41,10 @@ const transports: winston.transport[] = [
 ];
 
 // Add file transport for production if not in Lambda
-if (process.env.NODE_ENV === 'production' && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+if (
+  process.env.NODE_ENV === 'production' &&
+  !process.env.AWS_LAMBDA_FUNCTION_NAME
+) {
   transports.push(
     new winston.transports.File({
       filename: 'logs/error.log',
@@ -60,7 +66,9 @@ if (process.env.NODE_ENV === 'production' && !process.env.AWS_LAMBDA_FUNCTION_NA
 
 // Create the logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || (process.env.IS_LOCAL === 'true' ? 'debug' : 'info'),
+  level:
+    process.env.LOG_LEVEL ||
+    (process.env.IS_LOCAL === 'true' ? 'debug' : 'info'),
   levels,
   transports,
   // Do not exit on handled exceptions

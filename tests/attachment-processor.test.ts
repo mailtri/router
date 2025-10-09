@@ -1,5 +1,11 @@
 import { AttachmentProcessor } from '../src/attachment-processor';
-import { Attachment } from '../src/types';
+import {
+  Attachment,
+  CalendarMetadata,
+  ImageMetadata,
+  DocumentMetadata,
+  ArchiveMetadata,
+} from '../src/types';
 
 describe('AttachmentProcessor', () => {
   let processor: AttachmentProcessor;
@@ -33,11 +39,13 @@ END:VCALENDAR`;
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.type).toBe('calendar');
-      expect(result.metadata.events).toHaveLength(1);
-      expect(result.metadata.events[0].summary).toBe('Test Meeting');
-      expect(result.metadata.events[0].start).toBe('20240101T120000Z');
-      expect(result.metadata.events[0].end).toBe('20240101T130000Z');
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as CalendarMetadata;
+      expect(metadata.type).toBe('calendar');
+      expect(metadata.events).toHaveLength(1);
+      expect(metadata.events[0]?.summary).toBe('Test Meeting');
+      expect(metadata.events[0]?.start).toBe('20240101T120000Z');
+      expect(metadata.events[0]?.end).toBe('20240101T130000Z');
     });
 
     it('should handle multiple events in ICS file', async() => {
@@ -68,9 +76,11 @@ END:VCALENDAR`;
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.events).toHaveLength(2);
-      expect(result.metadata.events[0].summary).toBe('Meeting 1');
-      expect(result.metadata.events[1].summary).toBe('Meeting 2');
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as CalendarMetadata;
+      expect(metadata.events).toHaveLength(2);
+      expect(metadata.events[0]?.summary).toBe('Meeting 1');
+      expect(metadata.events[1]?.summary).toBe('Meeting 2');
     });
   });
 
@@ -123,10 +133,12 @@ END:VCALENDAR`;
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.type).toBe('image');
-      expect(result.metadata.format).toBe('png');
-      expect(result.metadata.width).toBe(100);
-      expect(result.metadata.height).toBe(100);
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as ImageMetadata;
+      expect(metadata.type).toBe('image');
+      expect(metadata.format).toBe('png');
+      expect(metadata.width).toBe(100);
+      expect(metadata.height).toBe(100);
     });
 
     it('should process JPEG images', async() => {
@@ -165,8 +177,10 @@ END:VCALENDAR`;
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.type).toBe('image');
-      expect(result.metadata.format).toBe('jpeg');
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as ImageMetadata;
+      expect(metadata.type).toBe('image');
+      expect(metadata.format).toBe('jpeg');
     });
 
     it('should process GIF images', async() => {
@@ -216,10 +230,12 @@ END:VCALENDAR`;
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.type).toBe('image');
-      expect(result.metadata.format).toBe('gif');
-      expect(result.metadata.width).toBe(100);
-      expect(result.metadata.height).toBe(100);
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as ImageMetadata;
+      expect(metadata.type).toBe('image');
+      expect(metadata.format).toBe('gif');
+      expect(metadata.width).toBe(100);
+      expect(metadata.height).toBe(100);
     });
   });
 
@@ -271,8 +287,10 @@ startxref
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.type).toBe('pdf');
-      expect(result.metadata.size).toBe(pdfContent.length);
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as DocumentMetadata;
+      expect(metadata.type).toBe('pdf');
+      expect(metadata.size).toBe(pdfContent.length);
     });
 
     it('should process Word documents', async() => {
@@ -287,8 +305,10 @@ startxref
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.type).toBe('docx');
-      expect(result.metadata.size).toBe(1024);
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as DocumentMetadata;
+      expect(metadata.type).toBe('docx');
+      expect(metadata.size).toBe(1024);
     });
   });
 
@@ -304,9 +324,11 @@ startxref
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.type).toBe('archive');
-      expect(result.metadata.format).toBe('zip');
-      expect(result.metadata.compressedSize).toBe(1024);
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as ArchiveMetadata;
+      expect(metadata.type).toBe('archive');
+      expect(metadata.format).toBe('zip');
+      expect(metadata.compressedSize).toBe(1024);
     });
 
     it('should process TAR archives', async() => {
@@ -320,9 +342,11 @@ startxref
       const result = await processor.processAttachment(attachment);
 
       expect(result.processed).toBe(true);
-      expect(result.metadata.type).toBe('archive');
-      expect(result.metadata.format).toBe('tar');
-      expect(result.metadata.compressedSize).toBe(1024);
+      expect(result.metadata).toBeDefined();
+      const metadata = result.metadata as ArchiveMetadata;
+      expect(metadata.type).toBe('archive');
+      expect(metadata.format).toBe('tar');
+      expect(metadata.compressedSize).toBe(1024);
     });
   });
 

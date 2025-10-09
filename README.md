@@ -216,6 +216,7 @@ WEBHOOK_URL=https://your-webhook-endpoint.com/email-notifications
 The router uses Winston for structured logging with different levels and outputs:
 
 #### **Log Levels**
+
 - `error`: Error messages only
 - `warn`: Warning and error messages
 - `info`: Info, warning, and error messages (default for production)
@@ -223,6 +224,7 @@ The router uses Winston for structured logging with different levels and outputs
 - `debug`: All messages including debug information (default for local development)
 
 #### **Environment Configuration**
+
 ```bash
 # Set log level via environment variable
 LOG_LEVEL=info  # Production: info, warn, error
@@ -230,17 +232,21 @@ LOG_LEVEL=debug # Development: all messages
 ```
 
 #### **Log Outputs**
+
 - **Local Development**: Colored console output with timestamps
 - **Production**: JSON formatted logs (perfect for CloudWatch)
 - **Lambda**: Automatically sends logs to CloudWatch Logs
 
 #### **CloudWatch Integration**
+
 In production (AWS Lambda), logs are automatically sent to CloudWatch Logs with:
+
 - **Log Group**: `/aws/lambda/mailtri-router`
 - **Structured JSON**: Easy to query and filter
 - **Log Retention**: Configurable via CDK
 
 #### **Example Log Output**
+
 ```json
 {
   "timestamp": "2024-01-01T12:00:00.000Z",
@@ -256,12 +262,14 @@ In production (AWS Lambda), logs are automatically sent to CloudWatch Logs with:
 The system uses a single webhook URL that receives different types of notifications based on the `type` parameter:
 
 #### 📥 **Receipt Notification** (`type: "email_received"`)
+
 - **When**: Sent immediately when email is received (before any processing)
 - **Purpose**: Real-time email receipt notifications
 - **Payload**: Basic email info (from, to, subject, hasBody, hasHtml)
 - **Use Case**: Show users that their email was received
 
 #### ✅ **Processing Notification** (`type: "email_processed"`)
+
 - **When**: Sent after successful processing and storage
 - **Purpose**: Confirm email was fully processed
 - **Payload**: Complete email data including parsed content, CC/BCC, attachments
@@ -270,6 +278,7 @@ The system uses a single webhook URL that receives different types of notificati
 **Example Webhook Payloads:**
 
 **Receipt Notification:**
+
 ```json
 {
   "type": "email_received",
@@ -289,6 +298,7 @@ The system uses a single webhook URL that receives different types of notificati
 ```
 
 **Processing Notification:**
+
 ```json
 {
   "type": "email_processed",
@@ -310,22 +320,23 @@ The system uses a single webhook URL that receives different types of notificati
 ```
 
 **Webhook Handler Example:**
+
 ```javascript
 app.post('/email-notifications', (req, res) => {
   const { type, messageId, email } = req.body;
-  
+
   switch (type) {
     case 'email_received':
       // Show user their email was received
       notifyUser(email.from, 'Email received successfully');
       break;
-      
+
     case 'email_processed':
       // Trigger downstream processing
       processEmail(email);
       break;
   }
-  
+
   res.status(200).json({ success: true });
 });
 ```
@@ -335,6 +346,7 @@ app.post('/email-notifications', (req, res) => {
 #### **Setting Log Levels in Production**
 
 **Via Environment Variables (Recommended):**
+
 ```bash
 # Set in your deployment configuration
 LOG_LEVEL=info  # Show info, warn, error logs
@@ -343,6 +355,7 @@ LOG_LEVEL=error # Show only error logs
 ```
 
 **Via AWS Lambda Environment Variables:**
+
 ```bash
 # In your CDK deployment or AWS Console
 aws lambda update-function-configuration \
@@ -351,6 +364,7 @@ aws lambda update-function-configuration \
 ```
 
 **Via CDK (Infrastructure as Code):**
+
 ```typescript
 // In your CDK stack
 const lambdaFunction = new Function(this, 'MailtriRouter', {
@@ -520,14 +534,6 @@ The router outputs standardized JSON payloads to SQS:
         "contentType": "application/pdf"
       }
     ]
-  },
-  "intent": {
-    "action": "create_task",
-    "target": "notion",
-    "parameters": {
-      "title": "New feature",
-      "description": "Please implement user authentication"
-    }
   }
 }
 ```

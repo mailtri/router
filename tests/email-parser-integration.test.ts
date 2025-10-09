@@ -1,5 +1,6 @@
 import { EmailParser } from '../src/email-parser';
 import { AttachmentProcessor } from '../src/attachment-processor';
+import { CalendarMetadata } from '../src/types';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -140,17 +141,13 @@ describe('Email Parser Integration Tests', () => {
         result.attachments[0]!,
       );
       expect(processedAttachment.processed).toBe(true);
-      expect(processedAttachment.metadata.type).toBe('calendar');
-      expect(processedAttachment.metadata.events).toHaveLength(1);
-      expect(processedAttachment.metadata.events[0].summary).toBe(
-        'Test Meeting',
-      );
-      expect(processedAttachment.metadata.events[0].start).toBe(
-        '20240101T120000Z',
-      );
-      expect(processedAttachment.metadata.events[0].end).toBe(
-        '20240101T130000Z',
-      );
+      expect(processedAttachment.metadata).toBeDefined();
+      const metadata = processedAttachment.metadata as CalendarMetadata;
+      expect(metadata.type).toBe('calendar');
+      expect(metadata.events).toHaveLength(1);
+      expect(metadata.events[0]?.summary).toBe('Test Meeting');
+      expect(metadata.events[0]?.start).toBe('20240101T120000Z');
+      expect(metadata.events[0]?.end).toBe('20240101T130000Z');
     });
   });
 

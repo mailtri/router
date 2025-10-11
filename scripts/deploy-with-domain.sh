@@ -81,5 +81,5 @@ else
   echo "📚 To set up email authentication manually, run:"
   echo "   ./scripts/setup-email-authentication.sh $DOMAIN_NAME"
   echo ""
-  echo "📖 See docs/ROUTE53-SETUP.md for detailed instructions"
+  echo "📖 See docs/EMAIL-VERIFICATION.md for detailed DNS and SES setup"
 fi
